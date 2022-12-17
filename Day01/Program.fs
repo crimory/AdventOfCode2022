@@ -1,4 +1,6 @@
-﻿open System
+﻿module Day01.Main
+
+open System
 open Day01.Solution
 
 let inputSeparatedByElves =
