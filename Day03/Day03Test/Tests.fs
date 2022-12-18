@@ -9,7 +9,7 @@ open Xunit
 [<InlineData ("jqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL", "jqHRNqRjqzjGDLGL", "rsFMfFZSrLrFZsSL")>]
 [<InlineData ("PmmdzqPrVvPwwTWBwg", "PmmdzqPrV", "vPwwTWBwg")>]
 let ``Split line per rucksack compartment`` input expectedFirstHalf expectedSecondHalf =
-    let (resultFirstHalf, resultSecondHalf) = splitLineInHalf input
+    let resultFirstHalf, resultSecondHalf = splitLineInHalf input
     Assert.Equal (expectedFirstHalf, resultFirstHalf)
     Assert.Equal (expectedSecondHalf, resultSecondHalf)
 
