@@ -1,6 +1,7 @@
 module Tests
 
 open Day03.Solution
+open Day03.SolutionInternals
 open Xunit
 
 [<Theory>]
