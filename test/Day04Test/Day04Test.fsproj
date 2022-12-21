@@ -9,6 +9,7 @@
 
     <ItemGroup>
         <Compile Include="Tests.fs" />
+        <Compile Include="Program.fs" />
     </ItemGroup>
 
     <ItemGroup>
@@ -25,7 +26,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Day05.fsproj" />
+      <ProjectReference Include="..\..\src\Day04\Day04.fsproj" />
     </ItemGroup>
 
 </Project>
