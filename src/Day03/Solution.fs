@@ -1,5 +1,7 @@
 namespace Day03
 
+open System
+
 module SolutionInternals =
     let internal splitLineInHalf (line: string) =
         let purifiedLine = line.Trim ()
@@ -20,15 +22,15 @@ module SolutionInternals =
             | "", _ -> line
             | acc, lineText ->
                 acc |> String.filter lineText.Contains
-        text.Split '\n'
+        text.Split Environment.NewLine
         |> Array.fold foldingForCommonLetter ""
         |> Seq.head
         
     let internal splitTextIntoElfGroups elfGroupSize (text: string) =
-        text.Split '\n'
+        text.Split Environment.NewLine
         |> Array.map (fun x -> x.Trim ())
         |> Array.chunkBySize elfGroupSize
-        |> Array.map (fun x -> x |> String.concat "\n")
+        |> Array.map (fun x -> x |> String.concat Environment.NewLine)
 
 module Solution =
     open SolutionInternals
@@ -39,7 +41,7 @@ module Solution =
         |> dict
 
     let getPrioritySum (text: string) =
-        text.Split '\n'
+        text.Split Environment.NewLine
         |> Array.map findRepetitionItem
         |> Array.map (fun c -> priorityValues[c])
         |> Array.sum

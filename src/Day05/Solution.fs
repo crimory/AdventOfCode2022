@@ -1,4 +1,7 @@
 namespace Day05
+
+open System
+
 module Solution =
     type Crate = Label of char
     type StackOfCrates = { Index: int; Crates: Crate list }
@@ -7,12 +10,12 @@ module Solution =
     type Instruction = { HowManyCrates: int; FromStackIndex: int; ToStackIndex: int }
     
     let internal separateShipFromCranePlan (text: string) =
-        let list = text.Split "\n\n"
+        let list = text.Split $"{Environment.NewLine}{Environment.NewLine}"
         (list[0], list[1])
         
     let internal readShipPlan (text: string) =
         let lines =
-            text.Split "\n"
+            text.Split Environment.NewLine
             |> Array.toList
         
         let stackIndices =
@@ -36,7 +39,7 @@ module Solution =
         |> Stacks
     
     let internal readCraneInstructions (text: string) =
-        text.Split "\n"
+        text.Split Environment.NewLine
         |> Array.map (fun x -> x.Split " ")
         |> Array.map (fun x -> { HowManyCrates = x[1] |> int; FromStackIndex = x[3] |> int; ToStackIndex = x[5] |> int })
         |> Array.toList
@@ -89,7 +92,7 @@ module Solution =
                 )
             |> List.toArray
         
-        finalTopCrateLabels |> System.String.Concat
+        finalTopCrateLabels |> String.Concat
     
     let processCraneMover9000Plan text =
         performSingleInstructionCraneMover9000

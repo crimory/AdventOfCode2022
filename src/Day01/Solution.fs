@@ -1,5 +1,7 @@
 module Day01.Solution
 
+open System
+
 let separateByElves (caloriesText:string) =
     let badIndex = -1
     let elfIndexBasedOnCalorieText elfIndex calorieText =
@@ -8,7 +10,7 @@ let separateByElves (caloriesText:string) =
         | _ -> elfIndex, elfIndex
         
     let caloriesList =
-        (caloriesText.Split '\n')
+        (caloriesText.Split Environment.NewLine)
         |> Array.toList
     let elfIndices =
         caloriesList

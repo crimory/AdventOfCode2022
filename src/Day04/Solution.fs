@@ -1,5 +1,7 @@
 module Day04.Solution
 
+open System
+
 type Assignment = { FirstRoom: int; LastRoom: int }
 
 type AssignmentPair =
@@ -24,7 +26,7 @@ let internal readAssignmentPair (line: string) =
           LastRoom = parsedNumbers[3] } }
 
 let private numberOfAssignmentsFiltered (text: string) filtering =
-    text.Split '\n'
+    text.Split Environment.NewLine
     |> Array.map readAssignmentPair
     |> Array.filter filtering
     |> Array.length

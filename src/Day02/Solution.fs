@@ -1,5 +1,7 @@
 module Day02.Solution
 
+open System
+
 type RockPaperScissorsSign = Rock | Paper | Scissors
 type RockPaperScissorsOutcome = Loose | Draw | Win
 
@@ -28,7 +30,7 @@ let calculateLineScoreTwoSigns (text: string) =
     calculateScore opponentSign playerSign
 
 let calculateStrategyScoreTwoSigns (text: string) =
-    text.Trim().Split("\n")
+    text.Trim().Split(Environment.NewLine)
     |> Array.map calculateLineScoreTwoSigns
     |> Array.sum
 
@@ -55,6 +57,6 @@ let calculateLineScoreSignAndOutcome (text: string) =
     calculateScore opponentSign playerSign
 
 let calculateStrategyScoreSignAndOutcome (text: string) =
-    text.Trim().Split("\n")
+    text.Trim().Split(Environment.NewLine)
     |> Array.map calculateLineScoreSignAndOutcome
     |> Array.sum
