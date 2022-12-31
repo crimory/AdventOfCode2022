@@ -36,12 +36,10 @@ public class DirectoryTree
         MainDirectory = new MyDirectory
         {
             Parent = null,
-            Name = MainDir,
-            Files = new List<MyFile>(),
-            SubDirectories = new List<MyDirectory>()
+            Name = MainDir
         };
         var currentDirectory = MainDirectory;
-        
+
         var lines = consoleOutput.Split(Environment.NewLine);
         foreach (var line in lines)
         {
@@ -49,60 +47,70 @@ public class DirectoryTree
             switch (lineType)
             {
                 case ConsoleLine.Command:
-                    var commandWithoutKeyword = line[(CommandStart.Length + Separator.Length)..];
-                    var commandType = GetCommandType(commandWithoutKeyword);
-                    switch (commandType)
-                    {
-                        case ConsoleCommand.ChangeDirectory:
-                            var changeDirWithoutKeyword = commandWithoutKeyword[(CommandChangeDir.Length + Separator.Length)..];
-                            var direction = GetDirectoryChangeDirection(changeDirWithoutKeyword);
-                            switch (direction)
-                            {
-                                case ChangeDirectoryCommand.Main:
-                                    currentDirectory = MainDirectory;
-                                    break;
-                                case ChangeDirectoryCommand.Up:
-                                    currentDirectory = currentDirectory.Parent;
-                                    break;
-                                case ChangeDirectoryCommand.Down:
-                                    var changeDirectoryName = changeDirWithoutKeyword;
-                                    currentDirectory =
-                                        currentDirectory.SubDirectories.Find(x => x.Name == changeDirectoryName);
-                                    break;
-                                default:
-                                    throw new ArgumentOutOfRangeException();
-                            }
-                            break;
-                        case ConsoleCommand.ListDirectory:
-                            break;
-                        default:
-                            throw new ArgumentOutOfRangeException();
-                    }
+                    currentDirectory = ProcessCommandsAndGetNewCurrentDir(line, currentDirectory);
                     break;
                 case ConsoleLine.Output:
-                    var pureOutput = line.Split(Separator);
-                    if (pureOutput[0] == ListedDirectory)
-                    {
-                        currentDirectory.SubDirectories.Add(new MyDirectory
-                        {
-                            Parent = currentDirectory,
-                            Name = pureOutput[1],
-                            Files = new List<MyFile>(),
-                            SubDirectories = new List<MyDirectory>()
-                        });
-                        break;
-                    }
-
-                    currentDirectory.Files.Add(new MyFile
-                    {
-                        Size = long.Parse(pureOutput[0]),
-                        Name = pureOutput[1]
-                    });
+                    ProcessLineOutput(line, currentDirectory);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
         }
+    }
+
+    private MyDirectory ProcessCommandsAndGetNewCurrentDir(string input, MyDirectory currentDirectory)
+    {
+        var commandWithoutKeyword = input[(CommandStart.Length + Separator.Length)..];
+        var commandType = GetCommandType(commandWithoutKeyword);
+        switch (commandType)
+        {
+            case ConsoleCommand.ChangeDirectory:
+                var changeDirWithoutKeyword = commandWithoutKeyword[(CommandChangeDir.Length + Separator.Length)..];
+                return ProcessChangeDirectory(changeDirWithoutKeyword, currentDirectory);
+            case ConsoleCommand.ListDirectory:
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
+
+        return currentDirectory;
+    }
+
+    private MyDirectory ProcessChangeDirectory(string input, MyDirectory currentDirectory)
+    {
+        var direction = GetDirectoryChangeDirection(input);
+        switch (direction)
+        {
+            case ChangeDirectoryCommand.Main:
+                return MainDirectory;
+            case ChangeDirectoryCommand.Up:
+                return currentDirectory.Parent ?? currentDirectory;
+            case ChangeDirectoryCommand.Down:
+                var changeDirectoryName = input;
+                return currentDirectory.SubDirectories.First(x => x.Name == changeDirectoryName);
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
+    }
+
+    private static void ProcessLineOutput(string input, MyDirectory currentDirectory)
+    {
+        var pureOutput = input.Split(Separator);
+        if (pureOutput[0] == ListedDirectory)
+        {
+            currentDirectory.SubDirectories.Add(new MyDirectory
+            {
+                Parent = currentDirectory,
+                Name = pureOutput[1]
+            });
+            return;
+        }
+
+        currentDirectory.Files.Add(new MyFile
+        {
+            Size = long.Parse(pureOutput[0]),
+            Name = pureOutput[1]
+        });
     }
 
     private static ConsoleLine GetLineType(string line)
@@ -118,7 +126,7 @@ public class DirectoryTree
             ? ConsoleCommand.ListDirectory
             : ConsoleCommand.ChangeDirectory;
     }
-    
+
     private static ChangeDirectoryCommand GetDirectoryChangeDirection(string dirChangeWithoutKeyword)
     {
         if (dirChangeWithoutKeyword.StartsWith(MainDir))
@@ -130,13 +138,21 @@ public class DirectoryTree
 
     private class MyDirectory
     {
+        public MyDirectory()
+        {
+            Name = string.Empty;
+            Parent = null;
+            SubDirectories = new List<MyDirectory>();
+            Files = new List<MyFile>();
+        }
+
         public string Name { get; init; }
         public MyDirectory? Parent { get; init; }
-        public List<MyDirectory> SubDirectories { get; init; }
-        public List<MyFile> Files { get; init; }
+        public List<MyDirectory> SubDirectories { get; }
+        public List<MyFile> Files { get; }
     }
 
-    private class MyFile
+    private record MyFile
     {
         public string Name { get; init; }
         public long Size { get; init; }
@@ -151,13 +167,11 @@ public class DirectoryTree
 
     private static long GetSizeOfDirAndAddToList(MyDirectory dir, Dictionary<MyDirectory, long> results, uint maxSize)
     {
-        var fromFiles =
-            dir
+        var fromFiles = dir
             .Files
             .Select(x => x.Size)
             .Sum();
-        var fromSubDirectories =
-            dir
+        var fromSubDirectories = dir
             .SubDirectories
             .Select(x => GetSizeOfDirAndAddToList(x, results, maxSize))
             .Sum();
@@ -181,4 +195,3 @@ public class DirectoryTree
         return possibilities.Min();
     }
 }
-
