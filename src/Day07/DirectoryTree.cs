@@ -29,16 +29,16 @@ public class DirectoryTree
         Down
     }
 
-    private MyDirectory MainDirectory;
+    private readonly MyDirectory _mainDirectory;
 
     public DirectoryTree(string consoleOutput)
     {
-        MainDirectory = new MyDirectory
+        _mainDirectory = new MyDirectory
         {
             Parent = null,
             Name = MainDir
         };
-        var currentDirectory = MainDirectory;
+        var currentDirectory = _mainDirectory;
 
         var lines = consoleOutput.Split(Environment.NewLine);
         foreach (var line in lines)
@@ -82,7 +82,7 @@ public class DirectoryTree
         switch (direction)
         {
             case ChangeDirectoryCommand.Main:
-                return MainDirectory;
+                return _mainDirectory;
             case ChangeDirectoryCommand.Up:
                 return currentDirectory.Parent ?? currentDirectory;
             case ChangeDirectoryCommand.Down:
@@ -161,7 +161,7 @@ public class DirectoryTree
     public long GetDirectoriesSizeSumAtMost(uint maxSize)
     {
         var results = new Dictionary<MyDirectory, long>();
-        GetSizeOfDirAndAddToList(MainDirectory, results, maxSize);
+        GetSizeOfDirAndAddToList(_mainDirectory, results, maxSize);
         return results.Select(x => x.Value).Sum();
     }
 
@@ -184,7 +184,7 @@ public class DirectoryTree
     public long GetSizeOfSmallestDeletedFolderToRunUpdate(uint diskSize, uint diskSpaceRequired)
     {
         var results = new Dictionary<MyDirectory, long>();
-        GetSizeOfDirAndAddToList(MainDirectory, results, diskSize);
+        GetSizeOfDirAndAddToList(_mainDirectory, results, diskSize);
         var diskSpaceOccupied = results
             .First(x => x.Key.Name == MainDir)
             .Value;
