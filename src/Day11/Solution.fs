@@ -22,6 +22,10 @@ module Solution =
         TestPositive: MonkeyTestOutcome
         TestNegative: MonkeyTestOutcome
     }
+    type MonkeyTurnOutput = {
+        Monkeys: Monkey list
+        NumberOfInspections: (uint<MonkeyIndex> * uint) list
+    }
     let internal ReadMonkeySetup (input: string) =
         let defaultMonkey =
             {
@@ -32,7 +36,7 @@ module Solution =
                 TestPositive = ThrowToMonkey 0u<MonkeyIndex>
                 TestNegative = ThrowToMonkey 0u<MonkeyIndex>
             }
-        let processMonkeyLine (singleMonkeyLine: string) monkeyAccumulator =
+        let processMonkeyLine (singleMonkeyLine: string) (monkeyAccumulator: Monkey) =
             let processLineFifthAndSix (text: string) =
                 let textParts = text.Split ": "
                 match textParts[1] with
@@ -101,8 +105,8 @@ module Solution =
         |> Array.map processMonkey
         |> Array.toList
     
-    let private getSpecificMonkey setup index =
-        setup
+    let private getSpecificMonkey (monkeys: Monkey list) index =
+        monkeys
         |> List.find (fun x -> x.Index = index)
     
     let private singleMonkeyBusinessTurn monkeyIndex (monkeys: Monkey list) (item: uint<WorryLevel>) =
@@ -138,18 +142,35 @@ module Solution =
         @ (monkeys |> List.filter (fun x -> indicesOfMonkeysToChange |> List.contains x.Index |> not))
         |> List.sortBy (fun x -> x.Index)
     
-    let internal MonkeyBusinessSingleMonkeyTurn (monkeySetup: Monkey list) (monkeyIndex: uint<MonkeyIndex>) =
-        let currentMonkey = (monkeyIndex |> getSpecificMonkey monkeySetup)
+    let internal MonkeyBusinessSingleMonkeyTurn (monkeys: MonkeyTurnOutput) (monkeyIndex: uint<MonkeyIndex>) =
+        let currentMonkey = (monkeyIndex |> getSpecificMonkey monkeys.Monkeys)
         let singleMonkeyBusinessTurnForCurrentIndex = singleMonkeyBusinessTurn monkeyIndex
-        currentMonkey.Items
-        |> List.fold singleMonkeyBusinessTurnForCurrentIndex monkeySetup
+        let newMonkeys =
+            currentMonkey.Items
+            |> List.fold singleMonkeyBusinessTurnForCurrentIndex monkeys.Monkeys
+        let previousNumberOfInspectionsRecord = monkeys.NumberOfInspections |> List.tryFind (fun (index, number) -> index = monkeyIndex)
+        let previousNumberOfInspections =
+            match previousNumberOfInspectionsRecord with
+            | None -> 0u
+            | Some (_, number) -> number
+        let currentNumberOfInspections = currentMonkey.Items |> List.length |> uint
+        let otherInspections = monkeys.NumberOfInspections |> List.filter (fun (index, _) -> index <> monkeyIndex)
+        { Monkeys = newMonkeys; NumberOfInspections = otherInspections @ [ (monkeyIndex, previousNumberOfInspections + currentNumberOfInspections) ] }
     
-    let internal MonkeyBusinessMonkeySetupRound (monkeySetup: Monkey list) =
-        monkeySetup
+    let internal MonkeyBusinessMonkeySetupRound (monkeys: MonkeyTurnOutput) =
+        monkeys.Monkeys
         |> List.map (fun x -> x.Index)
-        |> List.fold MonkeyBusinessSingleMonkeyTurn monkeySetup
+        |> List.fold MonkeyBusinessSingleMonkeyTurn monkeys
     
     let MonkeyBusinessScore (input: string) =
         let monkeyBusinessRounds = 20
-        let monkeySetup = ReadMonkeySetup input
-        0
+        let monkeys = ReadMonkeySetup input
+        let monkeyOutput =
+            [ 1 .. monkeyBusinessRounds ]
+            |> List.fold (fun acc _ -> MonkeyBusinessMonkeySetupRound acc) { Monkeys = monkeys; NumberOfInspections = [] }
+        let mostActiveMonkeysInspections =
+            monkeyOutput.NumberOfInspections
+            |> List.map snd
+            |> List.sortDescending
+            |> List.take 2
+        mostActiveMonkeysInspections[0] * mostActiveMonkeysInspections[1]

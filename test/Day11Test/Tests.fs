@@ -112,12 +112,15 @@ let ``Run first turn of the first round of monkey business`` () =
         }
     ]
     let monkeySetup = ReadMonkeySetup Input
-    let result = MonkeyBusinessSingleMonkeyTurn monkeySetup 0u<MonkeyIndex>
+    let monkeyIndex = 0u<MonkeyIndex>
+    let result = MonkeyBusinessSingleMonkeyTurn { Monkeys = monkeySetup; NumberOfInspections = [] } monkeyIndex
+    let _, resultNumberOfInspections = result.NumberOfInspections |> List.find (fun (index, _) -> index = monkeyIndex);
     
-    Assert.Equivalent (expected, result)
+    Assert.Equivalent (expected, result.Monkeys)
+    Assert.Equal (2u, resultNumberOfInspections)
     expected
-    |> List.zip result
-    |> List.map (fun expectedAndResult -> Assert.Equal (expectedAndResult |> fst, expectedAndResult |> snd))
+    |> List.zip result.Monkeys
+    |> List.map Assert.Equal
     |> ignore
 
 [<Fact>]
@@ -156,16 +159,28 @@ let ``Run first round of monkey business`` () =
             TestNegative = ThrowToMonkey 1u<MonkeyIndex>
         }
     ]
+    let expectedNumberOfInspections =
+        [
+            (0u<MonkeyIndex>, 2u)
+            (1u<MonkeyIndex>, 4u)
+            (2u<MonkeyIndex>, 3u)
+            (3u<MonkeyIndex>, 5u)
+        ]
     let monkeySetup = ReadMonkeySetup Input
-    let result = MonkeyBusinessMonkeySetupRound monkeySetup
+    let result = MonkeyBusinessMonkeySetupRound { Monkeys = monkeySetup; NumberOfInspections = [] }
     
-    Assert.Equivalent (expected, result)
+    Assert.Equivalent (expected, result.Monkeys)
     expected
-    |> List.zip result
-    |> List.map (fun expectedAndResult -> Assert.Equal (expectedAndResult |> fst, expectedAndResult |> snd))
+    |> List.zip result.Monkeys
+    |> List.map Assert.Equal
     |> ignore
+    expectedNumberOfInspections
+    |> List.zip result.NumberOfInspections
+    |> List.map (fun ((expectedIndex, expectedNumber), (resultIndex, resultNumber)) ->
+        Assert.Equal (expectedIndex, resultIndex)
+        Assert.Equal (expectedNumber, resultNumber))
 
 [<Fact>]
 let ``Observing monkey business score`` () =
     let result = MonkeyBusinessScore Input
-    Assert.Equivalent (10605, result)
+    Assert.Equivalent (10605u, result)
