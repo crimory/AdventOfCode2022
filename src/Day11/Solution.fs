@@ -101,43 +101,53 @@ module Solution =
         |> Array.map processMonkey
         |> Array.toList
     
-    let internal MonkeyBusinessSingleMonkeyTurns (monkeyIndex: uint<MonkeyIndex>) (monkeySetup: Monkey list) =
-        let getSpecificMonkey setup index =
-            setup
-            |> List.find (fun x -> x.Index = index)
+    let private getSpecificMonkey setup index =
+        setup
+        |> List.find (fun x -> x.Index = index)
+    
+    let private singleMonkeyBusinessTurn monkeyIndex (monkeys: Monkey list) (item: uint<WorryLevel>) =
+        let currentMonkey = (monkeyIndex |> getSpecificMonkey monkeys)
+        let worryLevelDuringInspection =
+            let getElement oldValue element =
+                match element with
+                | Old -> oldValue |> uint
+                | Number x -> x
+            let element1 = getElement item currentMonkey.Operation.Element1
+            let element2 = getElement item currentMonkey.Operation.Element2
+            match currentMonkey.Operation.Sign with
+            | Plus -> element1 + element2
+            | Minus -> element1 - element2
+            | Divide -> element1 / element2
+            | Multiply -> element1 * element2
+        let worryLevelAfterInspection = worryLevelDuringInspection / 3u
+        let testOutcome =
+            match currentMonkey.Test with
+            | DivisibleBy a -> worryLevelAfterInspection % a = 0u
+        let monkeyIndexToThrowItemTo =
+            match testOutcome with
+            | true ->
+                match currentMonkey.TestPositive with
+                | ThrowToMonkey a -> a
+            | false ->
+                match currentMonkey.TestNegative with
+                | ThrowToMonkey a -> a
+        let monkeyToThrowTo = monkeyIndexToThrowItemTo |> getSpecificMonkey monkeys
+        let indicesOfMonkeysToChange = [ monkeyIndex; monkeyIndexToThrowItemTo ]
+        [ { currentMonkey with Items = currentMonkey.Items |> List.filter (fun x -> x <> item) } ]
+        @ [ { monkeyToThrowTo with Items = monkeyToThrowTo.Items @ [ worryLevelAfterInspection * 1u<WorryLevel> ] } ]
+        @ (monkeys |> List.filter (fun x -> indicesOfMonkeysToChange |> List.contains x.Index |> not))
+        |> List.sortBy (fun x -> x.Index)
+    
+    let internal MonkeyBusinessSingleMonkeyTurn (monkeySetup: Monkey list) (monkeyIndex: uint<MonkeyIndex>) =
         let currentMonkey = (monkeyIndex |> getSpecificMonkey monkeySetup)
-        let singleMonkeyBusinessTurn (setup: Monkey list) (item: uint<WorryLevel>) =
-            let worryLevelDuringInspection =
-                let getElement oldValue element =
-                    match element with
-                    | Old -> oldValue |> uint
-                    | Number x -> x
-                let element1 = getElement item currentMonkey.Operation.Element1
-                let element2 = getElement item currentMonkey.Operation.Element2
-                match currentMonkey.Operation.Sign with
-                | Plus -> element1 + element2
-                | Minus -> element1 - element2
-                | Divide -> element1 / element2
-                | Multiply -> element1 * element2
-            let worryLevelAfterInspection = worryLevelDuringInspection / 3u
-            let testOutcome =
-                match currentMonkey.Test with
-                | DivisibleBy a -> worryLevelAfterInspection % a = 0u
-            let monkeyIndexToThrowItemTo =
-                match testOutcome with
-                | true ->
-                    match currentMonkey.TestPositive with
-                    | ThrowToMonkey a -> a
-                | false ->
-                    match currentMonkey.TestNegative with
-                    | ThrowToMonkey a -> a
-            let monkeyToThrowTo = monkeyIndexToThrowItemTo |> getSpecificMonkey setup
-            let indicesOfMonkeysToChange = [ monkeyIndex; monkeyIndexToThrowItemTo ]
-            [ { currentMonkey with Items = currentMonkey.Items |> List.filter (fun x -> x <> item) } ]
-            @ [ { monkeyToThrowTo with Items = monkeyToThrowTo.Items @ [ worryLevelAfterInspection * 1u<WorryLevel> ] } ]
-            @ (setup |> List.filter (fun x -> indicesOfMonkeysToChange |> List.contains x.Index |> not))
+        let singleMonkeyBusinessTurnForCurrentIndex = singleMonkeyBusinessTurn monkeyIndex
         currentMonkey.Items
-        |> List.fold singleMonkeyBusinessTurn monkeySetup
+        |> List.fold singleMonkeyBusinessTurnForCurrentIndex monkeySetup
+    
+    let internal MonkeyBusinessMonkeySetupRound (monkeySetup: Monkey list) =
+        monkeySetup
+        |> List.map (fun x -> x.Index)
+        |> List.fold MonkeyBusinessSingleMonkeyTurn monkeySetup
     
     let MonkeyBusinessScore (input: string) =
         let monkeyBusinessRounds = 20

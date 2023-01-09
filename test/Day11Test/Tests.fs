@@ -70,9 +70,13 @@ let ``Reading the monkey setup`` () =
     ]
     let result = ReadMonkeySetup Input
     Assert.Equivalent (expected, result)
+    expected
+    |> List.zip result
+    |> List.map (fun expectedAndResult -> Assert.Equal (expectedAndResult |> fst, expectedAndResult |> snd))
+    |> ignore
 
 [<Fact>]
-let ``Run first step of the first round of monkey business`` () =
+let ``Run first turn of the first round of monkey business`` () =
     let expected = [
         {
             Index = 0u<MonkeyIndex>
@@ -108,8 +112,58 @@ let ``Run first step of the first round of monkey business`` () =
         }
     ]
     let monkeySetup = ReadMonkeySetup Input
-    let result = MonkeyBusinessSingleMonkeyTurns 0u<MonkeyIndex> monkeySetup
+    let result = MonkeyBusinessSingleMonkeyTurn monkeySetup 0u<MonkeyIndex>
+    
     Assert.Equivalent (expected, result)
+    expected
+    |> List.zip result
+    |> List.map (fun expectedAndResult -> Assert.Equal (expectedAndResult |> fst, expectedAndResult |> snd))
+    |> ignore
+
+[<Fact>]
+let ``Run first round of monkey business`` () =
+    let expected = [
+        {
+            Index = 0u<MonkeyIndex>
+            Items = [ 20u<WorryLevel>; 23u<WorryLevel>; 27u<WorryLevel>; 26u<WorryLevel>; ]
+            Operation = { Element1 = Old; Sign = Multiply; Element2 = Number 19u }
+            Test = DivisibleBy 23u
+            TestPositive = ThrowToMonkey 2u<MonkeyIndex>
+            TestNegative = ThrowToMonkey 3u<MonkeyIndex>
+        }
+        {
+            Index = 1u<MonkeyIndex>
+            Items = [ 2080u<WorryLevel>; 25u<WorryLevel>; 167u<WorryLevel>; 207u<WorryLevel>; 401u<WorryLevel>; 1046u<WorryLevel>; ]
+            Operation = { Element1 = Old; Sign = Plus; Element2 = Number 6u }
+            Test = DivisibleBy 19u
+            TestPositive = ThrowToMonkey 2u<MonkeyIndex>
+            TestNegative = ThrowToMonkey 0u<MonkeyIndex>
+        }
+        {
+            Index = 2u<MonkeyIndex>
+            Items = []
+            Operation = { Element1 = Old; Sign = Multiply; Element2 = Old }
+            Test = DivisibleBy 13u
+            TestPositive = ThrowToMonkey 1u<MonkeyIndex>
+            TestNegative = ThrowToMonkey 3u<MonkeyIndex>
+        }
+        {
+            Index = 3u<MonkeyIndex>
+            Items = []
+            Operation = { Element1 = Old; Sign = Plus; Element2 = Number 3u }
+            Test = DivisibleBy 17u
+            TestPositive = ThrowToMonkey 0u<MonkeyIndex>
+            TestNegative = ThrowToMonkey 1u<MonkeyIndex>
+        }
+    ]
+    let monkeySetup = ReadMonkeySetup Input
+    let result = MonkeyBusinessMonkeySetupRound monkeySetup
+    
+    Assert.Equivalent (expected, result)
+    expected
+    |> List.zip result
+    |> List.map (fun expectedAndResult -> Assert.Equal (expectedAndResult |> fst, expectedAndResult |> snd))
+    |> ignore
 
 [<Fact>]
 let ``Observing monkey business score`` () =
