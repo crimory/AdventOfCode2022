@@ -47,7 +47,7 @@ type SingleMoveTestCases () as this =
 
 [<Theory; ClassData(typeof<SingleMoveTestCases>)>]
 let ``Perform single rope move`` rope direction expectedTail =
-    let result = SingleMoveRope direction rope
+    let result = SingleMoveShortRope direction rope
     Assert.Equal (expectedTail, result.Tail)
     
 [<Fact>]
@@ -86,7 +86,7 @@ let ``Main test of HowManyPositionsWasTailAt`` () =
 [<Fact>]
 let ``Main test of HowManyPositionsWasLongTailAt`` () =
     let result = HowManyPositionsWasLongTailAt Input
-    Assert.Equal (1, result)
+    Assert.Equal (1, result)  
 
 [<Fact>]
 let ``Main test of longer example for HowManyPositionsWasLongTailAt`` () =

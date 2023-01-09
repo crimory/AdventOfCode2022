@@ -17,7 +17,7 @@ module Solution =
             | "R" | "r" -> Right
             | "U" | "u" -> Up
             | "D" | "d" -> Down
-            | _ -> failwith "todo"
+            | _ -> failwith "Your input is incorrect!"
         lines
         |> Array.map (fun x -> x.Split " ")
         |> Array.map (fun x -> { Direction = x[0] |> parseDirection; Amount = x[1] |> uint })
@@ -46,14 +46,14 @@ module Solution =
         | head, Down -> { head with Y = head.Y - 1 }
         | head, Up -> { head with Y = head.Y + 1 }
         
-    let internal SingleMoveRope direction (rope: ShortRope) =
+    let internal SingleMoveShortRope direction (rope: ShortRope) =
         let newHead = rope.Head |> SingleMovePoint direction
         let newTail = newHead |> SingleFollowPointMovement rope.Tail
         { Head = newHead; Tail = newTail }
     
     let private MoveShortRope move rope =
         let getListOfTailPositionsAndNewRope ropeAccumulator =
-            let newRopeAccumulator = SingleMoveRope move.Direction ropeAccumulator
+            let newRopeAccumulator = SingleMoveShortRope move.Direction ropeAccumulator
             newRopeAccumulator.Tail, newRopeAccumulator
         let result =
             [ 1 .. move.Amount |> int ]
