@@ -27,6 +27,7 @@ module Solution =
         NumberOfInspections: (uint<MonkeyIndex> * uint64) list
     }
     let worryLevelConstant = 1UL<WorryLevel>
+    let monkeyIndexConstant = 1u<MonkeyIndex>
     
     let internal ReadMonkeySetup (input: string) =
         let defaultMonkey =
@@ -47,7 +48,7 @@ module Solution =
                     let monkeyIndex =
                         parts[3]
                         |> uint
-                    monkeyIndex * 1u<MonkeyIndex>
+                    monkeyIndex * monkeyIndexConstant
                     |> ThrowToMonkey
                 | _ -> failwith "unknown test outcome"
             match singleMonkeyLine with
@@ -56,7 +57,7 @@ module Solution =
                 let monkeyIndex =
                     parts[1].TrimEnd ':'
                     |> uint
-                { monkeyAccumulator with Index = monkeyIndex * 1u<MonkeyIndex> }
+                { monkeyAccumulator with Index = monkeyIndex * monkeyIndexConstant }
             | secondLine when secondLine.StartsWith "Starting items: " ->
                 let parts = secondLine.Split ": "
                 let items =
