@@ -3,20 +3,20 @@ namespace Day11
 open System
 
 module Solution =
-    type OperationElement = Old | Number of uint
+    type OperationElement = Old | Number of uint64
     type OperationSign = Plus | Minus | Divide | Multiply
     type Operation = {
         Element1: OperationElement
         Sign: OperationSign
         Element2: OperationElement
     }
-    type MonkeyTest = DivisibleBy of uint
+    type MonkeyTest = DivisibleBy of uint64
     [<Measure>] type MonkeyIndex
     [<Measure>] type WorryLevel
     type MonkeyTestOutcome = ThrowToMonkey of uint<MonkeyIndex>
     type Monkey = {
         Index: uint<MonkeyIndex>
-        Items: uint<WorryLevel> list
+        Items: uint64<WorryLevel> list
         Operation: Operation
         Test: MonkeyTest
         TestPositive: MonkeyTestOutcome
@@ -24,15 +24,17 @@ module Solution =
     }
     type MonkeyTurnOutput = {
         Monkeys: Monkey list
-        NumberOfInspections: (uint<MonkeyIndex> * uint) list
+        NumberOfInspections: (uint<MonkeyIndex> * uint64) list
     }
+    let worryLevelConstant = 1UL<WorryLevel>
+    
     let internal ReadMonkeySetup (input: string) =
         let defaultMonkey =
             {
                 Index = 0u<MonkeyIndex>
                 Items = []
                 Operation = { Element1 = Old; Sign = Plus; Element2 = Old }
-                Test = DivisibleBy 1u
+                Test = DivisibleBy 1UL
                 TestPositive = ThrowToMonkey 0u<MonkeyIndex>
                 TestNegative = ThrowToMonkey 0u<MonkeyIndex>
             }
@@ -59,8 +61,8 @@ module Solution =
                 let parts = secondLine.Split ": "
                 let items =
                     parts[1].Split ", "
-                    |> Array.map uint
-                    |> Array.map (fun x -> x * 1u<WorryLevel>)
+                    |> Array.map uint64
+                    |> Array.map (fun x -> x * worryLevelConstant)
                     |> Array.toList
                 { monkeyAccumulator with Items = items }
             | thirdLine when thirdLine.StartsWith "Operation: " ->
@@ -69,7 +71,7 @@ module Solution =
                 let oldOrNumber text =
                     match text with
                     | "old" -> Old
-                    | x -> x |> uint |> Number
+                    | x -> x |> uint64 |> Number
                 let readSign text =
                     match text with
                     | "+" -> Plus
@@ -87,7 +89,7 @@ module Solution =
                     match parts[1] with
                     | testText when testText.StartsWith "divisible by" ->
                         let parts = testText.Split " "
-                        parts[2] |> uint |> DivisibleBy
+                        parts[2] |> uint64 |> DivisibleBy
                     | _ -> failwith "unknown test"
                 { monkeyAccumulator with Test = testPart }
             | fifthLine when fifthLine.StartsWith "If true:" ->
@@ -109,12 +111,12 @@ module Solution =
         monkeys
         |> List.find (fun x -> x.Index = index)
     
-    let private singleMonkeyBusinessTurn monkeyIndex (monkeys: Monkey list) (item: uint<WorryLevel>) =
+    let private singleMonkeyBusinessTurn calculateWorryLevelAfterInspection monkeyIndex (monkeys: Monkey list) (item: uint64<WorryLevel>) =
         let currentMonkey = (monkeyIndex |> getSpecificMonkey monkeys)
         let worryLevelDuringInspection =
             let getElement oldValue element =
                 match element with
-                | Old -> oldValue |> uint
+                | Old -> oldValue |> uint64
                 | Number x -> x
             let element1 = getElement item currentMonkey.Operation.Element1
             let element2 = getElement item currentMonkey.Operation.Element2
@@ -123,10 +125,10 @@ module Solution =
             | Minus -> element1 - element2
             | Divide -> element1 / element2
             | Multiply -> element1 * element2
-        let worryLevelAfterInspection = worryLevelDuringInspection / 3u
+        let worryLevelAfterInspection = worryLevelDuringInspection |> calculateWorryLevelAfterInspection
         let testOutcome =
             match currentMonkey.Test with
-            | DivisibleBy a -> worryLevelAfterInspection % a = 0u
+            | DivisibleBy a -> worryLevelAfterInspection % a = 0UL
         let monkeyIndexToThrowItemTo =
             match testOutcome with
             | true ->
@@ -137,37 +139,40 @@ module Solution =
                 | ThrowToMonkey a -> a
         let monkeyToThrowTo = monkeyIndexToThrowItemTo |> getSpecificMonkey monkeys
         let indicesOfMonkeysToChange = [ monkeyIndex; monkeyIndexToThrowItemTo ]
-        [ { currentMonkey with Items = currentMonkey.Items |> List.filter (fun x -> x <> item) } ]
-        @ [ { monkeyToThrowTo with Items = monkeyToThrowTo.Items @ [ worryLevelAfterInspection * 1u<WorryLevel> ] } ]
+        [ { currentMonkey with Items = currentMonkey.Items |> List.skip 1 } ]
+        @ [ { monkeyToThrowTo with Items = monkeyToThrowTo.Items @ [ worryLevelAfterInspection * worryLevelConstant ] } ]
         @ (monkeys |> List.filter (fun x -> indicesOfMonkeysToChange |> List.contains x.Index |> not))
         |> List.sortBy (fun x -> x.Index)
     
-    let internal MonkeyBusinessSingleMonkeyTurn (monkeys: MonkeyTurnOutput) (monkeyIndex: uint<MonkeyIndex>) =
-        let currentMonkey = (monkeyIndex |> getSpecificMonkey monkeys.Monkeys)
-        let singleMonkeyBusinessTurnForCurrentIndex = singleMonkeyBusinessTurn monkeyIndex
+    let internal MonkeyBusinessSingleMonkeyTurn calculateWorryLevelAfterInspection (monkeys: MonkeyTurnOutput) (monkeyIndex: uint<MonkeyIndex>) =
+        let currentMonkey = monkeyIndex |> getSpecificMonkey monkeys.Monkeys
+        let singleMonkeyBusinessTurnForCurrentIndex = singleMonkeyBusinessTurn calculateWorryLevelAfterInspection monkeyIndex
         let newMonkeys =
             currentMonkey.Items
             |> List.fold singleMonkeyBusinessTurnForCurrentIndex monkeys.Monkeys
-        let previousNumberOfInspectionsRecord = monkeys.NumberOfInspections |> List.tryFind (fun (index, number) -> index = monkeyIndex)
+        let previousNumberOfInspectionsRecord = monkeys.NumberOfInspections |> List.tryFind (fun (index, _) -> index = monkeyIndex)
         let previousNumberOfInspections =
             match previousNumberOfInspectionsRecord with
-            | None -> 0u
+            | None -> 0UL
             | Some (_, number) -> number
-        let currentNumberOfInspections = currentMonkey.Items |> List.length |> uint
+        let currentNumberOfInspections = currentMonkey.Items |> List.length |> uint64
         let otherInspections = monkeys.NumberOfInspections |> List.filter (fun (index, _) -> index <> monkeyIndex)
         { Monkeys = newMonkeys; NumberOfInspections = otherInspections @ [ (monkeyIndex, previousNumberOfInspections + currentNumberOfInspections) ] }
     
-    let internal MonkeyBusinessMonkeySetupRound (monkeys: MonkeyTurnOutput) =
+    let internal MonkeyBusinessMonkeySetupRound calculateWorryLevelAfterInspection (monkeys: MonkeyTurnOutput) =
+        let monkeyBusinessSingleMonkeyTurnWithWorryLevelCalculation =
+            MonkeyBusinessSingleMonkeyTurn calculateWorryLevelAfterInspection
         monkeys.Monkeys
         |> List.map (fun x -> x.Index)
-        |> List.fold MonkeyBusinessSingleMonkeyTurn monkeys
+        |> List.fold monkeyBusinessSingleMonkeyTurnWithWorryLevelCalculation monkeys
     
-    let MonkeyBusinessScore (input: string) =
-        let monkeyBusinessRounds = 20
+    let MonkeyBusinessScore monkeyBusinessRounds calculateWorryLevelAfterInspection (input: string) =
+        let localMonkeyBusinessMonkeySetupRound =
+            MonkeyBusinessMonkeySetupRound calculateWorryLevelAfterInspection
         let monkeys = ReadMonkeySetup input
         let monkeyOutput =
             [ 1 .. monkeyBusinessRounds ]
-            |> List.fold (fun acc _ -> MonkeyBusinessMonkeySetupRound acc) { Monkeys = monkeys; NumberOfInspections = [] }
+            |> List.fold (fun acc _ -> localMonkeyBusinessMonkeySetupRound acc) { Monkeys = monkeys; NumberOfInspections = [] }
         let mostActiveMonkeysInspections =
             monkeyOutput.NumberOfInspections
             |> List.map snd

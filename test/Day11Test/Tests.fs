@@ -32,38 +32,41 @@ Monkey 3:
     If true: throw to monkey 0
     If false: throw to monkey 1"
 
+let calculateWorryLevelAfterInspectionFirstPart input =
+    input / 3UL
+
 [<Fact>]
 let ``Reading the monkey setup`` () =
     let expected = [
         {
             Index = 0u<MonkeyIndex>
-            Items = [ 79u<WorryLevel>; 98u<WorryLevel> ]
-            Operation = { Element1 = Old; Sign = Multiply; Element2 = Number 19u }
-            Test = DivisibleBy 23u
+            Items = [ 79UL<WorryLevel>; 98UL<WorryLevel> ]
+            Operation = { Element1 = Old; Sign = Multiply; Element2 = Number 19UL }
+            Test = DivisibleBy 23UL
             TestPositive = ThrowToMonkey 2u<MonkeyIndex>
             TestNegative = ThrowToMonkey 3u<MonkeyIndex>
         }
         {
             Index = 1u<MonkeyIndex>
-            Items = [ 54u<WorryLevel>; 65u<WorryLevel>; 75u<WorryLevel>; 74u<WorryLevel> ]
-            Operation = { Element1 = Old; Sign = Plus; Element2 = Number 6u }
-            Test = DivisibleBy 19u
+            Items = [ 54UL<WorryLevel>; 65UL<WorryLevel>; 75UL<WorryLevel>; 74UL<WorryLevel> ]
+            Operation = { Element1 = Old; Sign = Plus; Element2 = Number 6UL }
+            Test = DivisibleBy 19UL
             TestPositive = ThrowToMonkey 2u<MonkeyIndex>
             TestNegative = ThrowToMonkey 0u<MonkeyIndex>
         }
         {
             Index = 2u<MonkeyIndex>
-            Items = [ 79u<WorryLevel>; 60u<WorryLevel>; 97u<WorryLevel> ]
+            Items = [ 79UL<WorryLevel>; 60UL<WorryLevel>; 97UL<WorryLevel> ]
             Operation = { Element1 = Old; Sign = Multiply; Element2 = Old }
-            Test = DivisibleBy 13u
+            Test = DivisibleBy 13UL
             TestPositive = ThrowToMonkey 1u<MonkeyIndex>
             TestNegative = ThrowToMonkey 3u<MonkeyIndex>
         }
         {
             Index = 3u<MonkeyIndex>
-            Items = [ 74u<WorryLevel> ]
-            Operation = { Element1 = Old; Sign = Plus; Element2 = Number 3u }
-            Test = DivisibleBy 17u
+            Items = [ 74UL<WorryLevel> ]
+            Operation = { Element1 = Old; Sign = Plus; Element2 = Number 3UL }
+            Test = DivisibleBy 17UL
             TestPositive = ThrowToMonkey 0u<MonkeyIndex>
             TestNegative = ThrowToMonkey 1u<MonkeyIndex>
         }
@@ -81,43 +84,43 @@ let ``Run first turn of the first round of monkey business`` () =
         {
             Index = 0u<MonkeyIndex>
             Items = []
-            Operation = { Element1 = Old; Sign = Multiply; Element2 = Number 19u }
-            Test = DivisibleBy 23u
+            Operation = { Element1 = Old; Sign = Multiply; Element2 = Number 19UL }
+            Test = DivisibleBy 23UL
             TestPositive = ThrowToMonkey 2u<MonkeyIndex>
             TestNegative = ThrowToMonkey 3u<MonkeyIndex>
         }
         {
             Index = 1u<MonkeyIndex>
-            Items = [ 54u<WorryLevel>; 65u<WorryLevel>; 75u<WorryLevel>; 74u<WorryLevel> ]
-            Operation = { Element1 = Old; Sign = Plus; Element2 = Number 6u }
-            Test = DivisibleBy 19u
+            Items = [ 54UL<WorryLevel>; 65UL<WorryLevel>; 75UL<WorryLevel>; 74UL<WorryLevel> ]
+            Operation = { Element1 = Old; Sign = Plus; Element2 = Number 6UL }
+            Test = DivisibleBy 19UL
             TestPositive = ThrowToMonkey 2u<MonkeyIndex>
             TestNegative = ThrowToMonkey 0u<MonkeyIndex>
         }
         {
             Index = 2u<MonkeyIndex>
-            Items = [ 79u<WorryLevel>; 60u<WorryLevel>; 97u<WorryLevel> ]
+            Items = [ 79UL<WorryLevel>; 60UL<WorryLevel>; 97UL<WorryLevel> ]
             Operation = { Element1 = Old; Sign = Multiply; Element2 = Old }
-            Test = DivisibleBy 13u
+            Test = DivisibleBy 13UL
             TestPositive = ThrowToMonkey 1u<MonkeyIndex>
             TestNegative = ThrowToMonkey 3u<MonkeyIndex>
         }
         {
             Index = 3u<MonkeyIndex>
-            Items = [ 74u<WorryLevel>; 500u<WorryLevel>; 620u<WorryLevel> ]
-            Operation = { Element1 = Old; Sign = Plus; Element2 = Number 3u }
-            Test = DivisibleBy 17u
+            Items = [ 74UL<WorryLevel>; 500UL<WorryLevel>; 620UL<WorryLevel> ]
+            Operation = { Element1 = Old; Sign = Plus; Element2 = Number 3UL }
+            Test = DivisibleBy 17UL
             TestPositive = ThrowToMonkey 0u<MonkeyIndex>
             TestNegative = ThrowToMonkey 1u<MonkeyIndex>
         }
     ]
     let monkeySetup = ReadMonkeySetup Input
     let monkeyIndex = 0u<MonkeyIndex>
-    let result = MonkeyBusinessSingleMonkeyTurn { Monkeys = monkeySetup; NumberOfInspections = [] } monkeyIndex
+    let result = MonkeyBusinessSingleMonkeyTurn calculateWorryLevelAfterInspectionFirstPart { Monkeys = monkeySetup; NumberOfInspections = [] } monkeyIndex
     let _, resultNumberOfInspections = result.NumberOfInspections |> List.find (fun (index, _) -> index = monkeyIndex);
     
     Assert.Equivalent (expected, result.Monkeys)
-    Assert.Equal (2u, resultNumberOfInspections)
+    Assert.Equal (2UL, resultNumberOfInspections)
     expected
     |> List.zip result.Monkeys
     |> List.map Assert.Equal
@@ -128,17 +131,17 @@ let ``Run first round of monkey business`` () =
     let expected = [
         {
             Index = 0u<MonkeyIndex>
-            Items = [ 20u<WorryLevel>; 23u<WorryLevel>; 27u<WorryLevel>; 26u<WorryLevel>; ]
-            Operation = { Element1 = Old; Sign = Multiply; Element2 = Number 19u }
-            Test = DivisibleBy 23u
+            Items = [ 20UL<WorryLevel>; 23UL<WorryLevel>; 27UL<WorryLevel>; 26UL<WorryLevel>; ]
+            Operation = { Element1 = Old; Sign = Multiply; Element2 = Number 19UL }
+            Test = DivisibleBy 23UL
             TestPositive = ThrowToMonkey 2u<MonkeyIndex>
             TestNegative = ThrowToMonkey 3u<MonkeyIndex>
         }
         {
             Index = 1u<MonkeyIndex>
-            Items = [ 2080u<WorryLevel>; 25u<WorryLevel>; 167u<WorryLevel>; 207u<WorryLevel>; 401u<WorryLevel>; 1046u<WorryLevel>; ]
-            Operation = { Element1 = Old; Sign = Plus; Element2 = Number 6u }
-            Test = DivisibleBy 19u
+            Items = [ 2080UL<WorryLevel>; 25UL<WorryLevel>; 167UL<WorryLevel>; 207UL<WorryLevel>; 401UL<WorryLevel>; 1046UL<WorryLevel>; ]
+            Operation = { Element1 = Old; Sign = Plus; Element2 = Number 6UL }
+            Test = DivisibleBy 19UL
             TestPositive = ThrowToMonkey 2u<MonkeyIndex>
             TestNegative = ThrowToMonkey 0u<MonkeyIndex>
         }
@@ -146,28 +149,28 @@ let ``Run first round of monkey business`` () =
             Index = 2u<MonkeyIndex>
             Items = []
             Operation = { Element1 = Old; Sign = Multiply; Element2 = Old }
-            Test = DivisibleBy 13u
+            Test = DivisibleBy 13UL
             TestPositive = ThrowToMonkey 1u<MonkeyIndex>
             TestNegative = ThrowToMonkey 3u<MonkeyIndex>
         }
         {
             Index = 3u<MonkeyIndex>
             Items = []
-            Operation = { Element1 = Old; Sign = Plus; Element2 = Number 3u }
-            Test = DivisibleBy 17u
+            Operation = { Element1 = Old; Sign = Plus; Element2 = Number 3UL }
+            Test = DivisibleBy 17UL
             TestPositive = ThrowToMonkey 0u<MonkeyIndex>
             TestNegative = ThrowToMonkey 1u<MonkeyIndex>
         }
     ]
     let expectedNumberOfInspections =
         [
-            (0u<MonkeyIndex>, 2u)
-            (1u<MonkeyIndex>, 4u)
-            (2u<MonkeyIndex>, 3u)
-            (3u<MonkeyIndex>, 5u)
+            (0u<MonkeyIndex>, 2UL)
+            (1u<MonkeyIndex>, 4UL)
+            (2u<MonkeyIndex>, 3UL)
+            (3u<MonkeyIndex>, 5UL)
         ]
     let monkeySetup = ReadMonkeySetup Input
-    let result = MonkeyBusinessMonkeySetupRound { Monkeys = monkeySetup; NumberOfInspections = [] }
+    let result = MonkeyBusinessMonkeySetupRound calculateWorryLevelAfterInspectionFirstPart { Monkeys = monkeySetup; NumberOfInspections = [] }
     
     Assert.Equivalent (expected, result.Monkeys)
     expected
@@ -182,5 +185,22 @@ let ``Run first round of monkey business`` () =
 
 [<Fact>]
 let ``Observing monkey business score`` () =
-    let result = MonkeyBusinessScore Input
-    Assert.Equivalent (10605u, result)
+    let result = MonkeyBusinessScore 20 calculateWorryLevelAfterInspectionFirstPart Input
+    Assert.Equivalent (10605UL, result)
+
+[<Theory>]
+[<InlineData(1, 24UL)>]
+[<InlineData(20, 10_197UL)>]
+[<InlineData(1_000, 27_019_168UL)>]
+[<InlineData(2_000, 108_263_829UL)>]
+[<InlineData(3_000, 243_843_334UL)>]
+[<InlineData(4_000, 433_783_826UL)>]
+[<InlineData(5_000, 677_950_000UL)>]
+[<InlineData(6_000, 976_497_976UL)>]
+[<InlineData(7_000, 1_328_891_200UL)>]
+[<InlineData(8_000, 1_736_135_168UL)>]
+[<InlineData(9_000, 2_197_354_615UL)>]
+[<InlineData(10_000, 2_713_310_158UL)>]
+let ``Observing monkey business score second part`` howManyRounds expectedResult =
+    let result = MonkeyBusinessScore howManyRounds id Input
+    Assert.Equivalent (expectedResult, result)
