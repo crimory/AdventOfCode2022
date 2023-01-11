@@ -167,9 +167,21 @@ module Solution =
         |> List.fold monkeyBusinessSingleMonkeyTurnWithWorryLevelCalculation monkeys
     
     let MonkeyBusinessScore monkeyBusinessRounds calculateWorryLevelAfterInspection (input: string) =
-        let localMonkeyBusinessMonkeySetupRound =
-            MonkeyBusinessMonkeySetupRound calculateWorryLevelAfterInspection
         let monkeys = ReadMonkeySetup input
+        // stolen from https://github.com/jovaneyck/advent-of-code-2022/blob/main/day%2011/part2.fsx
+        // thanks mate! :D
+        let worryLevelSafeguard =
+            monkeys
+            |> List.map (fun x -> x.Test)
+            |> List.map (fun x -> match x with DivisibleBy number -> number)
+            |> List.reduce (*)
+        let calculateWorryLevelAfterInspectionWithSafeguard =
+            fun input ->
+                input
+                |> calculateWorryLevelAfterInspection
+                |> (fun x -> x % worryLevelSafeguard)
+        let localMonkeyBusinessMonkeySetupRound =
+            MonkeyBusinessMonkeySetupRound calculateWorryLevelAfterInspectionWithSafeguard
         let monkeyOutput =
             [ 1 .. monkeyBusinessRounds ]
             |> List.fold (fun acc _ -> localMonkeyBusinessMonkeySetupRound acc) { Monkeys = monkeys; NumberOfInspections = [] }
