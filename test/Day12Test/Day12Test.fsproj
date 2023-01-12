@@ -9,6 +9,8 @@
 
     <ItemGroup>
         <Compile Include="Tests.fs" />
+        <Compile Include="BackwardsSolutionTests.fs" />
+        <Compile Include="ForwardsSolutionTests.fs" />
         <Compile Include="Program.fs" />
     </ItemGroup>
 
