@@ -123,7 +123,7 @@ let GetNextStepBranchesExample03 () =
     ]
     let expected = [
         previousPoints @ [{ Height = End; Coordinates = { X = 27; Y = 0 } }]
-        previousPoints @ [{ Height = Height 26; Coordinates = { X = 26; Y = 1 } }]
+        previousPoints @ [{ Height = Height 1; Coordinates = { X = 26; Y = 1 } }]
     ]
     
     let map = ReadInput InputForBranchTests
@@ -131,6 +131,7 @@ let GetNextStepBranchesExample03 () =
     let result = GetNextStepBranches map previousPoints
     Assert.Equal (expected.Length, result.Length)
     Assert.Equivalent (expected[0], result[0])
+    Assert.Equivalent (expected[1], result[1])
 
 [<Fact>]
 let ``Shortest route steps example 2`` () =
