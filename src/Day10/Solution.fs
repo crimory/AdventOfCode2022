@@ -4,7 +4,6 @@ open System
 
 module Solution =
     type internal Instruction = Noop | AddX of int
-    type internal InstructionType = Noop | Add
     let internal ReadInstructions (input: string) =
         let readLine line =
             match line with
@@ -19,11 +18,10 @@ module Solution =
         |> List.map readLine
     
     let internal BuildCycleOutput instructions =
-        let mapInstructionLength = dict [ Noop, 1; Add, 2 ]
         let cycleOutputPerInstruction acc instruction =
             match instruction with
-            | Instruction.Noop -> [ for _ in 1 .. mapInstructionLength[Noop] -> acc ], acc
-            | AddX x -> [ for _ in 1 .. (mapInstructionLength[Add] - 1) -> acc ] @ [ acc + x ], acc + x
+            | Instruction.Noop -> [ acc ], acc
+            | AddX x -> [ acc; (acc + x) ], acc + x
         let cycleOutputAfterFirst2 =
             instructions
             |> List.mapFold cycleOutputPerInstruction 1
@@ -35,7 +33,7 @@ module Solution =
         let instructions = ReadInstructions input
         let cyclesOutput = BuildCycleOutput instructions
         cycleIndices
-        |> List.map (fun x -> cyclesOutput[x] * x)
+        |> List.map (fun cycleIndex -> cyclesOutput[cycleIndex] * cycleIndex)
         |> List.sum
     
     let GetCrtOutput input =

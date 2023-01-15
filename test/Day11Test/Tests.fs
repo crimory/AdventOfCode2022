@@ -1,6 +1,5 @@
 module Tests
 
-open System
 open Xunit
 open Day11.Solution
 
