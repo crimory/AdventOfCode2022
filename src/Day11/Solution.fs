@@ -177,10 +177,8 @@ module Solution =
             |> List.map (fun x -> match x with DivisibleBy number -> number)
             |> List.reduce (*)
         let calculateWorryLevelAfterInspectionWithSafeguard =
-            fun input ->
-                input
-                |> calculateWorryLevelAfterInspection
-                |> (fun x -> x % worryLevelSafeguard)
+            calculateWorryLevelAfterInspection
+            >> (fun x -> x % worryLevelSafeguard)
         let localMonkeyBusinessMonkeySetupRound =
             MonkeyBusinessMonkeySetupRound calculateWorryLevelAfterInspectionWithSafeguard
         let monkeyOutput =
