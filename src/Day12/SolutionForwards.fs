@@ -1,8 +1,9 @@
 module Day12.SolutionForwards
 
 open Day12.Solution
-open Solution
 open System
+
+type SolutionDirection = Upwards | Downwards
 
 let private areNextPointCoordinatesAcceptable currentCoordinates previousCoordinates =
     match currentCoordinates, previousCoordinates with
@@ -14,21 +15,22 @@ let internal GetPossibleNextPoints map currentPoint =
     map
     |> List.filter (fun x -> x.Coordinates |> areNextPointCoordinatesAcceptable currentPoint.Coordinates)
 
-let internal IsNextPointHeightAcceptable currentPoint nextPoint =
+let internal IsNextPointHeightAcceptable solutionDirection currentPoint nextPoint =
     let currentHeight = currentPoint |> currentPointHeight
     let nextHeight = nextPoint |> currentPointHeight
-    match currentHeight, nextHeight with
-    | current, next when (next - current) <= 1 -> true
+    match solutionDirection, currentHeight, nextHeight with
+    | Upwards, current, next when (next - current) <= 1 -> true
+    | Downwards, current, next when (current - next) <= 1 -> true
     | _ -> false
 
-let internal GetNextAcceptablePoints map currentPoint =
+let internal GetNextAcceptablePoints solutionDirection map currentPoint =
     GetPossibleNextPoints map currentPoint
-    |> List.filter (fun x -> x |> IsNextPointHeightAcceptable currentPoint)
+    |> List.filter (fun x -> x |> IsNextPointHeightAcceptable solutionDirection currentPoint)
 
-let internal GetNextStepBranches map (previousPoints: MapPoint list) =
+let internal GetNextStepBranches solutionDirection map (previousPoints: MapPoint list) =
     let currentPoint = previousPoints |> List.last
     let acceptableNewPoints =
-        GetNextAcceptablePoints map currentPoint
+        GetNextAcceptablePoints solutionDirection map currentPoint
         |> List.filter (fun x -> previousPoints |> List.contains x |> not)
     acceptableNewPoints
     |> List.map (fun x -> previousPoints @ [x])
@@ -37,23 +39,23 @@ let private TakeMaximumOf maxLength list =
     list
     |> List.take (if list.Length > maxLength then maxLength else list.Length)
 
-let rec internal GetFullBranches map (initialPointsVisited: MapPoint list) (initialPreviousPaths: MapPoint list list) =
+let rec internal GetFullBranches startHeight targetHeight solutionDirection map (initialPointsVisited: MapPoint list) (initialPreviousPaths: MapPoint list list) =
     let pointsVisited =
         match initialPointsVisited with
-        | [] -> [ map |> List.find (fun x -> x.Height = Start) ]
+        | [] -> [ map |> List.find (fun x -> x.Height = startHeight) ]
         | a -> a
     let previousPaths =
         match initialPreviousPaths with
-        | [] -> [ [ map |> List.find (fun x -> x.Height = Start) ] ]
+        | [] -> [ [ map |> List.find (fun x -> x.Height = startHeight) ] ]
         | a -> a
     let completedPaths, incompletePaths =
         previousPaths
-        |> List.partition (fun x -> (x |> List.last).Height = End )
+        |> List.partition (fun x -> (x |> List.last).Height = targetHeight )
     match completedPaths with
     | [] ->
         let potentialNextPaths =
             incompletePaths
-            |> List.map (GetNextStepBranches map)
+            |> List.map (GetNextStepBranches solutionDirection map)
             |> List.collect id
         let nextPointsFiltered =
             potentialNextPaths
@@ -67,11 +69,23 @@ let rec internal GetFullBranches map (initialPointsVisited: MapPoint list) (init
             |> List.map (fun (_, groupedPaths) -> groupedPaths |> List.sortBy (fun x -> x.Length) |> List.take 1)
             |> List.collect id
         nextPaths
-        |> GetFullBranches map (pointsVisited @ nextPointsFiltered)
+        |> GetFullBranches startHeight targetHeight solutionDirection map (pointsVisited @ nextPointsFiltered)
     | completed -> completed
 
 let GetShortestRouteNumberOfSteps input =
     let map = ReadInput input
-    GetFullBranches map [] []
+    GetFullBranches Start End Upwards map [] []
+    |> List.map (fun x -> x.Length - 1)
+    |> List.min
+
+let GetShortestRouteNumberOfStepsToAnyLowestPoint input =
+    let map = ReadInput input
+    let mapWithoutStart =
+        map
+        |> List.map (fun x ->
+            if x.Height = Start
+            then { x with Height = Height 1 }
+            else x)
+    GetFullBranches End (Height 1) Downwards mapWithoutStart [] []
     |> List.map (fun x -> x.Length - 1)
     |> List.min

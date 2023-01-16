@@ -25,7 +25,7 @@ let internal ReadInput (input: string) =
     |> List.collect id
 
 let internal currentPointHeight currentPoint =
-    let HeightOfSpecialMarkers = dict [ Start, 0; End, 27 ]
+    let HeightOfSpecialMarkers = dict [ Start, 1; End, 26 ]
     match currentPoint.Height with
     | Start -> HeightOfSpecialMarkers[Start]
     | End -> HeightOfSpecialMarkers[End]
