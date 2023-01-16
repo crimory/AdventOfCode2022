@@ -1,5 +1,6 @@
 module Day12.SolutionForwards
 
+open Day12.Solution
 open Solution
 open System
 
@@ -32,24 +33,45 @@ let internal GetNextStepBranches map (previousPoints: MapPoint list) =
     acceptableNewPoints
     |> List.map (fun x -> previousPoints @ [x])
 
-let rec internal GetFullBranches map (initialPreviousPaths: MapPoint list list) =
+let private TakeMaximumOf maxLength list =
+    list
+    |> List.take (if list.Length > maxLength then maxLength else list.Length)
+
+let rec internal GetFullBranches map (initialPointsVisited: MapPoint list) (initialPreviousPaths: MapPoint list list) =
+    let pointsVisited =
+        match initialPointsVisited with
+        | [] -> [ map |> List.find (fun x -> x.Height = Start) ]
+        | a -> a
     let previousPaths =
         match initialPreviousPaths with
         | [] -> [ [ map |> List.find (fun x -> x.Height = Start) ] ]
         | a -> a
-    let completePaths, incompletePaths =
+    let completedPaths, incompletePaths =
         previousPaths
         |> List.partition (fun x -> (x |> List.last).Height = End )
-    match completePaths with
+    match completedPaths with
     | [] ->
-        incompletePaths
-        |> List.map (GetNextStepBranches map)
-        |> List.collect id
-        |> GetFullBranches map
+        let potentialNextPaths =
+            incompletePaths
+            |> List.map (GetNextStepBranches map)
+            |> List.collect id
+        let nextPointsFiltered =
+            potentialNextPaths
+            |> List.map (fun x -> x |> List.last)
+            |> List.distinct
+            |> List.filter (fun x -> pointsVisited |> List.contains x |> not)
+        let nextPaths =
+            potentialNextPaths
+            |> List.filter (fun x -> nextPointsFiltered |> List.contains (x |> List.last))
+            |> List.groupBy (fun x -> x |> List.last)
+            |> List.map (fun (_, groupedPaths) -> groupedPaths |> List.sortBy (fun x -> x.Length) |> List.take 1)
+            |> List.collect id
+        nextPaths
+        |> GetFullBranches map (pointsVisited @ nextPointsFiltered)
     | completed -> completed
 
 let GetShortestRouteNumberOfSteps input =
     let map = ReadInput input
-    GetFullBranches map []
+    GetFullBranches map [] []
     |> List.map (fun x -> x.Length - 1)
     |> List.min

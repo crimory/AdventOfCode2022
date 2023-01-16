@@ -61,7 +61,7 @@ let branchTestsAIncorrect11 = { Height = Height 1; Coordinates = { X = 1; Y = 1 
 [<Fact>]
 let GetFullBranchesTests () =
     let map = ReadInput InputForBranchTests
-    let result = GetFullBranches map []
+    let result = GetFullBranches map [] []
     Assert.Equal (1, result.Length)
     Assert.Equal (28, result.Head.Length)
 
