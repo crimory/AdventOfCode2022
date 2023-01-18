@@ -98,3 +98,58 @@ let GetSumOfPacketIndicesInCorrectOrder (input: string) =
     |> List.map (fun (i, x) -> i + 1, x)
     |> List.filter (fun (_, x) -> x = CorrectOrder)
     |> List.sumBy fst
+
+let GetDecoderKey (dividerPackets: PacketPart list) (input: string) =
+    let inputPackets =
+        input
+        |> ReadInput
+        |> List.map (fun x -> [x.LeftItems; x.RightItems])
+        |> List.concat
+    let mappingPairwise (left: PacketPart) (right: PacketPart) (newPacket: PacketPart) (newPacketAlreadyPlaced: bool) =
+        match newPacketAlreadyPlaced with
+        | true -> [ left ], true
+        | false ->
+            let newFarLeft = ComparePacketOrder newPacket left
+            let newInMiddleLeft = ComparePacketOrder left newPacket
+            let newInMiddleRight = ComparePacketOrder newPacket right
+            match newFarLeft, newInMiddleLeft, newInMiddleRight with
+            | CorrectOrder, _, _ ->
+                [ newPacket; left ], true
+            | _, CorrectOrder, CorrectOrder ->
+                [ left; newPacket ], true
+            | _ ->
+                [ left ], false
+    let orderPackets (currentOrder: PacketPart list) (newPacket: PacketPart) =
+        match currentOrder with
+        | [] -> [ newPacket ]
+        | [ a ] ->
+            match ComparePacketOrder a newPacket with
+            | CorrectOrder -> [ a; newPacket ]
+            | IncorrectOrder -> [ newPacket; a ]
+            | NotDecided -> [ a; newPacket ]
+        | a ->
+            let mostOfOutcome =
+                a
+                |> List.pairwise
+                |> List.mapFold (fun acc (left, right) -> mappingPairwise left right newPacket acc) false
+                |> fst
+                |> List.concat
+            let lastInputElement = a |> List.last
+            let endPartOfOutcome =
+                match mostOfOutcome.Length with
+                | length when length = a.Length -> [ lastInputElement ]
+                | _ ->
+                    let newAlmostLast = ComparePacketOrder newPacket lastInputElement
+                    match newAlmostLast with
+                    | CorrectOrder ->
+                        [ newPacket; lastInputElement ]
+                    | _ ->
+                        [ lastInputElement; newPacket ]
+            mostOfOutcome @ endPartOfOutcome
+    dividerPackets @ inputPackets
+    |> List.fold orderPackets []
+    |> List.indexed
+    |> List.map (fun (i, x) -> i + 1, x)
+    |> List.filter (fun (_, x) -> dividerPackets |> List.contains x)
+    |> List.map fst
+    |> List.reduce (*)

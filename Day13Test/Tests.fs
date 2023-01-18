@@ -160,3 +160,13 @@ let ``Compare values example 03`` () =
 let ``Test whole input`` () =
     let result = GetSumOfPacketIndicesInCorrectOrder Input
     Assert.Equal (13, result)
+
+[<Fact>]
+let ``GetDecoderKey test`` () =
+    let dividerPackets =
+        [
+            ListOfValues [ ListOfValues [ Value 2 ] ]
+            ListOfValues [ ListOfValues [ Value 6 ] ]
+        ]
+    let result = GetDecoderKey dividerPackets Input
+    Assert.Equal (140, result)
