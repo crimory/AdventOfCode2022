@@ -25,7 +25,7 @@ let ``Shortest route towards any a (lowest point)`` () =
 let GetNextAcceptablePointsTest currentX currentY expectedNumberOfPoints =
     let map = ReadInput Input
     let currentPoint = map |> List.find (fun x -> x.Coordinates.X = currentX && x.Coordinates.Y = currentY)
-    let result = GetNextAcceptablePoints Upwards map currentPoint
+    let result = GetNextAcceptablePoints (IsNextPointHeightAcceptable Upwards) map currentPoint
     Assert.Equal (expectedNumberOfPoints, result.Length)
 
 [<Theory>]
@@ -67,7 +67,7 @@ let branchTestsAIncorrect11 = { Height = Height 1; Coordinates = { X = 1; Y = 1 
 [<Fact>]
 let GetFullBranchesTests () =
     let map = ReadInput InputForBranchTests
-    let result = GetFullBranches Start End Upwards map [] []
+    let result = GetFullBranchesFromStartToEnd map
     Assert.Equal (1, result.Length)
     Assert.Equal (28, result.Head.Length)
 
@@ -76,7 +76,8 @@ let GetNextStepBranchesExample01 () =
     let expected = [ [branchTestsStart; branchTestsACorrect]; [branchTestsStart; branchTestsAIncorrect01] ]
     
     let map = ReadInput InputForBranchTests
-    let result = GetNextStepBranches Upwards map [ map |> List.find (fun x -> x.Height = Start) ]
+    let getNextAcceptablePoints = GetNextAcceptablePoints (IsNextPointHeightAcceptable Upwards) map
+    let result = GetNextStepBranches getNextAcceptablePoints [ map |> List.find (fun x -> x.Height = Start) ]
     Assert.Equal (expected.Length, result.Length)
     Assert.Equivalent (expected[0], result[0])
     Assert.Equivalent (expected[1], result[1])
@@ -90,8 +91,8 @@ let GetNextStepBranchesExample02 () =
     ]
     
     let map = ReadInput InputForBranchTests
-    
-    let result = GetNextStepBranches Upwards map previousPoints
+    let getNextAcceptablePoints = GetNextAcceptablePoints (IsNextPointHeightAcceptable Upwards) map
+    let result = GetNextStepBranches getNextAcceptablePoints previousPoints
     Assert.Equal (expected.Length, result.Length)
     Assert.Equivalent (expected[0], result[0])
     Assert.Equivalent (expected[1], result[1])
@@ -133,8 +134,9 @@ let GetNextStepBranchesExample03 () =
     ]
     
     let map = ReadInput InputForBranchTests
+    let getNextAcceptablePoints = GetNextAcceptablePoints (IsNextPointHeightAcceptable Upwards) map
+    let result = GetNextStepBranches getNextAcceptablePoints previousPoints
     
-    let result = GetNextStepBranches Upwards map previousPoints
     Assert.Equal (expected.Length, result.Length)
     Assert.Equivalent (expected[0], result[0])
     Assert.Equivalent (expected[1], result[1])
