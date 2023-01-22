@@ -76,7 +76,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Day13", "Day13", "{86C41782
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Day13", "src\Day13\Day13.fsproj", "{6AEF9D05-EF98-4CC8-AA16-4F401A4EE687}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Day13Test", "Day13Test\Day13Test.fsproj", "{A6112DE9-CD14-4F68-BDF2-AFA47E83A5C4}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Day13Test", "test\Day13Test\Day13Test.fsproj", "{A6112DE9-CD14-4F68-BDF2-AFA47E83A5C4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
