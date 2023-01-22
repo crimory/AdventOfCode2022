@@ -32,7 +32,7 @@ let ``Build map`` () =
     Assert.Contains({ X = 494; Y = 9 }, result)
 
 [<Theory>]
-[<InlineData (500, 0, false, false)>]
+[<InlineData (500, 0, false, true)>]
 [<InlineData (500, 8, false, true)>]
 [<InlineData (500, 0, true, true)>]
 [<InlineData (498, 3, false, false)>]

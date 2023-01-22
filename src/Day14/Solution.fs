@@ -52,16 +52,26 @@ let internal GetSandUnitNextState (map: Point list) (sandUnit: SandUnit) =
     match sandUnit.State with
     | SandState.Settled -> sandUnit
     | SandState.Falling ->
-        let nextPositionBelow = { X = sandUnit.Position.X; Y = sandUnit.Position.Y + 1 }
-        let nextPositionLeft = { X = sandUnit.Position.X - 1; Y = sandUnit.Position.Y + 1 }
-        let nextPositionRight = { X = sandUnit.Position.X + 1; Y = sandUnit.Position.Y + 1 }
+        let firstMapPointWithSameX =
+            map
+            |> List.filter (fun p -> p.X = sandUnit.Position.X)
+            |> List.filter (fun p -> p.Y > sandUnit.Position.Y)
+            |> function
+                | [] -> { sandUnit.Position with Y = sandUnit.Position.Y + 1 }
+                | a -> a
+                    |> List.sortBy (fun p -> p.Y)
+                    |> List.head
+        
+        let nextPositionBelow = { X = sandUnit.Position.X; Y = firstMapPointWithSameX.Y }
+        let nextPositionLeft = { X = sandUnit.Position.X - 1; Y = firstMapPointWithSameX.Y }
+        let nextPositionRight = { X = sandUnit.Position.X + 1; Y = firstMapPointWithSameX.Y }
         
         let isPositionBelowTaken = map |> List.contains nextPositionBelow
         let isPositionLeftTaken = map |> List.contains nextPositionLeft
         let isPositionRightTaken = map |> List.contains nextPositionRight
         
         match isPositionBelowTaken, isPositionLeftTaken, isPositionRightTaken with
-        | true, true, true -> { sandUnit with State = SandState.Settled }
+        | true, true, true -> { Position = { firstMapPointWithSameX with Y = firstMapPointWithSameX.Y - 1 }; State = SandState.Settled }
         | false, _, _ -> { Position = nextPositionBelow; State = SandState.Falling }
         | true, false, _ -> { Position = nextPositionLeft; State = SandState.Falling }
         | true, true, false -> { Position = nextPositionRight; State = SandState.Falling }
@@ -73,11 +83,9 @@ let GetNumberOfSandUnitsThatSettle (input: string) =
     let mutable sandUnit = sandStartingUnit
     let mutable sandUnitsCount = 0
     while sandUnit.State = SandState.Settled || sandUnitsCount = 0 do
-        sandUnit <-
-            [ 1..mapMaximumY ]
-            |> List.fold (fun acc _ ->
-                GetSandUnitNextState map acc
-                ) sandStartingUnit
+        sandUnit <- sandStartingUnit
+        while sandUnit.State = SandState.Falling && sandUnit.Position.Y <= mapMaximumY do
+            sandUnit <- GetSandUnitNextState map sandUnit
         match sandUnit.State with
         | SandState.Settled ->
             sandUnitsCount <- sandUnitsCount + 1
@@ -100,11 +108,9 @@ let GetNumberOfSandUnitsThatSettleWithFloor (input: string) =
     let mutable sandUnit = sandStartingUnit
     let mutable sandUnitsCount = 0
     while sandUnit <> { sandStartingUnit with State = SandState.Settled } || sandUnitsCount = 0 do
-        sandUnit <-
-            [ 1..(mapMaximumY + 2) ]
-            |> List.fold (fun acc _ ->
-                GetSandUnitNextState map acc
-                ) sandStartingUnit
+        sandUnit <- sandStartingUnit
+        while sandUnit.State = SandState.Falling && sandUnit.Position.Y <= (mapMaximumY + 2) do
+            sandUnit <- GetSandUnitNextState map sandUnit
         match sandUnit.State with
         | SandState.Settled ->
             sandUnitsCount <- sandUnitsCount + 1
