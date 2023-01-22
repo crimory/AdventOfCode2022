@@ -46,3 +46,8 @@ let ``Check next sand unit state`` xInput yInput isSettled expectedIsSettled =
 let ``Get settled sand units count`` () =
     let result = GetNumberOfSandUnitsThatSettle Input
     Assert.Equal(24, result)
+
+[<Fact>]
+let ``Get settled sand units count, including floor`` () =
+    let result = GetNumberOfSandUnitsThatSettleWithFloor Input
+    Assert.Equal(93, result)

@@ -67,8 +67,7 @@ let internal GetSandUnitNextState (map: Point list) (sandUnit: SandUnit) =
         | true, true, false -> { Position = nextPositionRight; State = SandState.Falling }
 
 let GetNumberOfSandUnitsThatSettle (input: string) =
-    let sandStartingPoint = { X = 500; Y = 0 }
-    let sandStartingUnit = { Position = sandStartingPoint; State = SandState.Falling }
+    let sandStartingUnit = { Position = { X = 500; Y = 0 }; State = SandState.Falling }
     let mutable map = ReadInput input
     let mapMaximumY = map |> List.map (fun p -> p.Y) |> List.max
     let mutable sandUnit = sandStartingUnit
@@ -76,6 +75,33 @@ let GetNumberOfSandUnitsThatSettle (input: string) =
     while sandUnit.State = SandState.Settled || sandUnitsCount = 0 do
         sandUnit <-
             [ 1..mapMaximumY ]
+            |> List.fold (fun acc _ ->
+                GetSandUnitNextState map acc
+                ) sandStartingUnit
+        match sandUnit.State with
+        | SandState.Settled ->
+            sandUnitsCount <- sandUnitsCount + 1
+            map <- map @ [ sandUnit.Position ]
+        | SandState.Falling ->
+            ()
+    sandUnitsCount
+
+let GetNumberOfSandUnitsThatSettleWithFloor (input: string) =
+    let sandStartingUnit = { Position = { X = 500; Y = 0 }; State = SandState.Falling }
+    
+    let mutable map = ReadInput input
+    let mapMaximumY = map |> List.map (fun p -> p.Y) |> List.max
+    let farLeftFloorPoint = { X = sandStartingUnit.Position.X - mapMaximumY - 2; Y = mapMaximumY + 2 }
+    let farRightFloorPoint = { X = sandStartingUnit.Position.X + mapMaximumY + 2; Y = mapMaximumY + 2 }
+    let floorPoints =
+        GetLinePoints farLeftFloorPoint farRightFloorPoint
+    map <- map @ floorPoints
+    
+    let mutable sandUnit = sandStartingUnit
+    let mutable sandUnitsCount = 0
+    while sandUnit <> { sandStartingUnit with State = SandState.Settled } || sandUnitsCount = 0 do
+        sandUnit <-
+            [ 1..(mapMaximumY + 2) ]
             |> List.fold (fun acc _ ->
                 GetSandUnitNextState map acc
                 ) sandStartingUnit
