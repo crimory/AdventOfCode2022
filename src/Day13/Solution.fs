@@ -5,7 +5,7 @@ open System
 type PacketPart = ListOfValues of PacketPart list | Value of int
 type PacketPair = { LeftItems: PacketPart; RightItems: PacketPart }
 type internal FoldAccumulator = { ValueIndex: int; BracketCounter: int }
-type ComparisonResult = CorrectOrder | IncorrectOrder | NotDecided
+type internal ComparisonResult = CorrectOrder | IncorrectOrder | NotDecided
 
 let private InnerDivide (line: string) =
     line
@@ -33,8 +33,11 @@ let private InnerDivide (line: string) =
 
 let internal DivideString (input: string) =
     let inputDivided = InnerDivide input
-    match inputDivided.Length = 1 && (inputDivided |> List.last) = input with
-    | true -> input.Substring(1, input.Length - 2) |> InnerDivide
+    let wasInputSingleList = inputDivided.Length = 1 && (inputDivided |> List.last) = input
+    match wasInputSingleList with
+    | true ->
+        let inputWithoutListBrackets = input.Substring(1, input.Length - 2)
+        inputWithoutListBrackets |> InnerDivide
     | false -> inputDivided
 
 let rec internal ReadPacketPart (input: string) =
