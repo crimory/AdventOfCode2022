@@ -54,13 +54,10 @@ let internal GetSandUnitNextState (map: Point list) (sandUnit: SandUnit) =
     | SandState.Falling ->
         let firstMapPointWithSameX =
             map
-            |> List.filter (fun p -> p.X = sandUnit.Position.X)
-            |> List.filter (fun p -> p.Y > sandUnit.Position.Y)
+            |> List.filter (fun p -> p.X = sandUnit.Position.X && p.Y > sandUnit.Position.Y)
             |> function
                 | [] -> { sandUnit.Position with Y = sandUnit.Position.Y + 1 }
-                | a -> a
-                    |> List.sortBy (fun p -> p.Y)
-                    |> List.head
+                | a -> a |> List.minBy (fun p -> p.Y)
         
         let nextPositionBelow = { X = sandUnit.Position.X; Y = firstMapPointWithSameX.Y }
         let nextPositionLeft = { X = sandUnit.Position.X - 1; Y = firstMapPointWithSameX.Y }
@@ -89,7 +86,7 @@ let GetNumberOfSandUnitsThatSettle (input: string) =
         match sandUnit.State with
         | SandState.Settled ->
             sandUnitsCount <- sandUnitsCount + 1
-            map <- map @ [ sandUnit.Position ]
+            map <- sandUnit.Position :: map
         | SandState.Falling ->
             ()
     sandUnitsCount
@@ -114,7 +111,7 @@ let GetNumberOfSandUnitsThatSettleWithFloor (input: string) =
         match sandUnit.State with
         | SandState.Settled ->
             sandUnitsCount <- sandUnitsCount + 1
-            map <- map @ [ sandUnit.Position ]
+            map <- sandUnit.Position :: map
         | SandState.Falling ->
             ()
     sandUnitsCount
