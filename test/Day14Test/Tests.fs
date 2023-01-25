@@ -31,17 +31,6 @@ let ``Build map`` () =
     Assert.Contains({ X = 495; Y = 9 }, result)
     Assert.Contains({ X = 494; Y = 9 }, result)
 
-[<Theory>]
-[<InlineData (500, 0, false, true)>]
-[<InlineData (500, 8, false, true)>]
-[<InlineData (500, 0, true, true)>]
-[<InlineData (498, 3, false, false)>]
-let ``Check next sand unit state`` xInput yInput isSettled expectedIsSettled =
-    let map = ReadInput Input
-    let sandUnit = { Position = { X = xInput; Y = yInput }; State = if isSettled then Settled else Falling }
-    let result = GetSandUnitNextState map sandUnit
-    Assert.Equal((if expectedIsSettled then Settled else Falling), result.State)
-
 [<Fact>]
 let ``Get settled sand units count`` () =
     let result = GetNumberOfSandUnitsThatSettle Input

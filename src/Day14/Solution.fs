@@ -13,19 +13,19 @@ let private GetLinePoints startAnchor endAnchor =
     | x1, y1, x2, y2 when x1 = x2 ->
         let yRange =
             match y1, y2 with
-            | y1, y2 when y1 < y2 -> [ y1..y2 ]
-            | y1, y2 when y1 > y2 -> [ y2..y1 ]
-            | _ -> [ y1 ]
+            | y1, y2 when y1 < y2 -> [| y1..y2 |]
+            | y1, y2 when y1 > y2 -> [| y2..y1 |]
+            | _ -> [| y1 |]
         yRange
-        |> List.map (fun y -> { X = x1; Y = y })
+        |> Array.map (fun y -> { X = x1; Y = y })
     | x1, y1, x2, y2 when y1 = y2 ->
         let xRange =
             match x1, x2 with
-            | x1, x2 when x1 < x2 -> [ x1..x2 ]
-            | x1, x2 when x1 > x2 -> [ x2..x1 ]
-            | _ -> [ x1 ]
+            | x1, x2 when x1 < x2 -> [| x1..x2 |]
+            | x1, x2 when x1 > x2 -> [| x2..x1 |]
+            | _ -> [| x1 |]
         xRange
-        |> List.map (fun x -> { X = x; Y = y1 })
+        |> Array.map (fun x -> { X = x; Y = y1 })
     | _ ->
         failwith "Invalid line"
 
@@ -39,79 +39,72 @@ let private ReadLine (line: string) =
     |> Array.pairwise
     |> Array.map (fun (startAnchor, endAnchor) ->
         GetLinePoints startAnchor endAnchor)
-    |> Array.toList
-    |> List.concat
+    |> Array.concat
 
 let internal ReadInput (input: string) =
     input.Split Environment.NewLine
-    |> Array.toList
-    |> List.map ReadLine
-    |> List.concat
+    |> Array.map ReadLine
+    |> Array.concat
 
-let internal GetSandUnitNextState (map: Point list) (sandUnit: SandUnit) =
+let private GetSandUnitNextState (map: bool[,]) (sandUnit: SandUnit) =
     match sandUnit.State with
     | SandState.Settled -> sandUnit
     | SandState.Falling ->
-        let firstMapPointWithSameX =
-            map
-            |> List.filter (fun p -> p.X = sandUnit.Position.X && p.Y > sandUnit.Position.Y)
-            |> function
-                | [] -> { sandUnit.Position with Y = sandUnit.Position.Y + 1 }
-                | a -> a |> List.minBy (fun p -> p.Y)
+        let nextPositionBelow = { X = sandUnit.Position.X; Y = sandUnit.Position.Y + 1 }
+        let nextPositionLeft = { X = sandUnit.Position.X - 1; Y = sandUnit.Position.Y + 1 }
+        let nextPositionRight = { X = sandUnit.Position.X + 1; Y = sandUnit.Position.Y + 1 }
         
-        let nextPositionBelow = { X = sandUnit.Position.X; Y = firstMapPointWithSameX.Y }
-        let nextPositionLeft = { X = sandUnit.Position.X - 1; Y = firstMapPointWithSameX.Y }
-        let nextPositionRight = { X = sandUnit.Position.X + 1; Y = firstMapPointWithSameX.Y }
-        
-        let isPositionBelowTaken = map |> List.contains nextPositionBelow
-        let isPositionLeftTaken = map |> List.contains nextPositionLeft
-        let isPositionRightTaken = map |> List.contains nextPositionRight
-        
-        match isPositionBelowTaken, isPositionLeftTaken, isPositionRightTaken with
-        | true, true, true -> { Position = { firstMapPointWithSameX with Y = firstMapPointWithSameX.Y - 1 }; State = SandState.Settled }
-        | false, _, _ -> { Position = nextPositionBelow; State = SandState.Falling }
-        | true, false, _ -> { Position = nextPositionLeft; State = SandState.Falling }
-        | true, true, false -> { Position = nextPositionRight; State = SandState.Falling }
+        match map.GetLength 0, map.GetLength 1 with
+        | x, y when nextPositionBelow.X >= x || nextPositionBelow.Y >= y ->
+            { sandUnit with Position = nextPositionBelow }
+        | _ ->
+            let isPositionBelowTaken = map[nextPositionBelow.X, nextPositionBelow.Y]
+            let isPositionLeftTaken = map[nextPositionLeft.X, nextPositionLeft.Y]
+            let isPositionRightTaken = map[nextPositionRight.X, nextPositionRight.Y]
+            
+            match isPositionBelowTaken, isPositionLeftTaken, isPositionRightTaken with
+            | true, true, true -> { sandUnit with State = SandState.Settled }
+            | false, _, _ -> { Position = nextPositionBelow; State = SandState.Falling }
+            | true, false, _ -> { Position = nextPositionLeft; State = SandState.Falling }
+            | true, true, false -> { Position = nextPositionRight; State = SandState.Falling }
 
-let GetNumberOfSandUnitsThatSettle (input: string) =
-    let sandStartingUnit = { Position = { X = 500; Y = 0 }; State = SandState.Falling }
-    let mutable map = ReadInput input
-    let mapMaximumY = map |> List.map (fun p -> p.Y) |> List.max
+let private GetProperMap (inputMap: Point[]) =
+    let mapMaximumY = inputMap |> Array.map (fun p -> p.Y) |> Array.max
+    let mapMaximumX = inputMap |> Array.map (fun p -> p.X) |> Array.max
+    let map = Array2D.create (mapMaximumX+1) (mapMaximumY+1) false
+    inputMap |> Array.iter (fun p -> map[p.X, p.Y] <- true)
+    map
+
+let private CountSandUnitsThatSettled (getEndCondition: SandUnit -> bool) (sandStartingUnit: SandUnit) (map: bool[,]) =
     let mutable sandUnit = sandStartingUnit
     let mutable sandUnitsCount = 0
-    while sandUnit.State = SandState.Settled || sandUnitsCount = 0 do
+    while getEndCondition sandUnit || sandUnitsCount = 0 do
         sandUnit <- sandStartingUnit
-        while sandUnit.State = SandState.Falling && sandUnit.Position.Y <= mapMaximumY do
+        while sandUnit.State = SandState.Falling && sandUnit.Position.Y <= ((map.GetLength 1) - 1) do
             sandUnit <- GetSandUnitNextState map sandUnit
         match sandUnit.State with
         | SandState.Settled ->
             sandUnitsCount <- sandUnitsCount + 1
-            map <- sandUnit.Position :: map
+            map[sandUnit.Position.X, sandUnit.Position.Y] <- true
         | SandState.Falling ->
             ()
     sandUnitsCount
+
+let GetNumberOfSandUnitsThatSettle (input: string) =
+    let sandStartingUnit = { Position = { X = 500; Y = 0 }; State = SandState.Falling }
+    let mapRaw = ReadInput input
+    let map = GetProperMap mapRaw
+    CountSandUnitsThatSettled (fun sandUnit -> sandUnit.State = SandState.Settled) sandStartingUnit map
 
 let GetNumberOfSandUnitsThatSettleWithFloor (input: string) =
     let sandStartingUnit = { Position = { X = 500; Y = 0 }; State = SandState.Falling }
     
-    let mutable map = ReadInput input
-    let mapMaximumY = map |> List.map (fun p -> p.Y) |> List.max
+    let mapRaw = ReadInput input
+    let mapMaximumY = mapRaw |> Array.map (fun p -> p.Y) |> Array.max
     let farLeftFloorPoint = { X = sandStartingUnit.Position.X - mapMaximumY - 2; Y = mapMaximumY + 2 }
     let farRightFloorPoint = { X = sandStartingUnit.Position.X + mapMaximumY + 2; Y = mapMaximumY + 2 }
     let floorPoints =
         GetLinePoints farLeftFloorPoint farRightFloorPoint
-    map <- map @ floorPoints
+    let map = GetProperMap (Array.concat [ mapRaw; floorPoints ])
     
-    let mutable sandUnit = sandStartingUnit
-    let mutable sandUnitsCount = 0
-    while sandUnit <> { sandStartingUnit with State = SandState.Settled } || sandUnitsCount = 0 do
-        sandUnit <- sandStartingUnit
-        while sandUnit.State = SandState.Falling && sandUnit.Position.Y <= (mapMaximumY + 2) do
-            sandUnit <- GetSandUnitNextState map sandUnit
-        match sandUnit.State with
-        | SandState.Settled ->
-            sandUnitsCount <- sandUnitsCount + 1
-            map <- sandUnit.Position :: map
-        | SandState.Falling ->
-            ()
-    sandUnitsCount
+    CountSandUnitsThatSettled (fun sandUnit -> sandUnit <> { sandStartingUnit with State = SandState.Settled }) sandStartingUnit map
