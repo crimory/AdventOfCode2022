@@ -46,7 +46,7 @@ let internal ReadInput (input: string) =
     |> Array.map ReadLine
     |> Array.concat
 
-let private GetSandUnitNextState (map: bool[,]) (sandUnit: SandUnit) =
+let internal GetSandUnitNextState (map: bool[,]) (sandUnit: SandUnit) =
     match sandUnit.State with
     | SandState.Settled -> sandUnit
     | SandState.Falling ->
@@ -68,7 +68,7 @@ let private GetSandUnitNextState (map: bool[,]) (sandUnit: SandUnit) =
             | true, false, _ -> { Position = nextPositionLeft; State = SandState.Falling }
             | true, true, false -> { Position = nextPositionRight; State = SandState.Falling }
 
-let private GetProperMap (inputMap: Point[]) =
+let internal GetProperMap (inputMap: Point[]) =
     let mapMaximumY = inputMap |> Array.map (fun p -> p.Y) |> Array.max
     let mapMaximumX = inputMap |> Array.map (fun p -> p.X) |> Array.max
     let map = Array2D.create (mapMaximumX+1) (mapMaximumY+1) false
