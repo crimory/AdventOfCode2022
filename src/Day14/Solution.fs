@@ -3,8 +3,6 @@ module Day14.Solution
 open System
 
 type Point = { X: int; Y: int }
-type Line = { Start: Point; End: Point }
-type SandStartingPoint = { Position: Point }
 type SandState = Falling | Settled
 type SandUnit = { Position: Point; State: SandState }
 
