@@ -1,9 +1,3 @@
-fn get_input_for_tests() -> String {
-    "498,4 -> 498,6 -> 496,6
-503,4 -> 502,4 -> 502,9 -> 494,9"
-        .to_string()
-}
-
 #[derive(Clone, Copy, Debug, PartialEq)]
 struct Point {
     x: u32,
@@ -29,18 +23,6 @@ struct SandUnit {
 }
 
 fn parse_point(point: &str) -> Point {
-    // point.split(",")
-    //     .collect::<Vec<&str>>()
-    //     .windows(2)
-    //     .map(|window| {
-    //         let x = window[0].parse::<u32>().unwrap();
-    //         let y = window[1].parse::<u32>().unwrap();
-    //         Point { x, y }
-    //     })
-    //     .collect::<Vec<Point>>()
-    //     .first()
-    //     .unwrap()
-    //     .to_owned()
     let mut parts = point.split(",");
     let x = parts.next().unwrap().parse::<u32>().unwrap();
     let y = parts.next().unwrap().parse::<u32>().unwrap();
@@ -65,38 +47,6 @@ fn parse_input(input: &str) -> Vec<Line> {
         .map(|line| parse_line(line))
         .flatten()
         .collect::<Vec<Line>>()
-}
-
-#[test]
-fn test_parse_input() {
-    let input = get_input_for_tests();
-    let expected = vec![
-        Line {
-            start: Point { x: 498, y: 4 },
-            end: Point { x: 498, y: 6 },
-        },
-        Line {
-            start: Point { x: 498, y: 6 },
-            end: Point { x: 496, y: 6 },
-        },
-        Line {
-            start: Point { x: 503, y: 4 },
-            end: Point { x: 502, y: 4 },
-        },
-        Line {
-            start: Point { x: 502, y: 4 },
-            end: Point { x: 502, y: 9 },
-        },
-        Line {
-            start: Point { x: 502, y: 9 },
-            end: Point { x: 494, y: 9 },
-        },
-    ];
-    let result = parse_input(&input);
-    assert_eq!(expected.len(), result.len());
-    for i in 0..expected.len() {
-        assert_eq!(expected[i], result[i]);
-    }
 }
 
 fn get_line_points(line: &Line) -> Vec<Point> {
@@ -124,20 +74,6 @@ fn get_line_points(line: &Line) -> Vec<Point> {
     points
 }
 
-#[test]
-fn test_get_line_points() {
-    let line = Line {
-        start: Point { x: 503, y: 4 },
-        end: Point { x: 502, y: 4 },
-    };
-    let expected = vec![Point { x: 503, y: 4 }, Point { x: 502, y: 4 }];
-    let result = get_line_points(&line);
-    assert_eq!(expected.len(), result.len());
-    for i in 0..expected.len() {
-        assert_eq!(expected[i], result[i]);
-    }
-}
-
 fn get_points_map(input: &str) -> Vec<Point> {
     let mut points = parse_input(input)
         .iter()
@@ -146,38 +82,6 @@ fn get_points_map(input: &str) -> Vec<Point> {
         .collect::<Vec<Point>>();
     points.dedup();
     points
-}
-
-#[test]
-fn test_get_points_map() {
-    let input = get_input_for_tests();
-    let expected = vec![
-        Point { x: 498, y: 4 },
-        Point { x: 498, y: 5 },
-        Point { x: 498, y: 6 },
-        Point { x: 497, y: 6 },
-        Point { x: 496, y: 6 },
-        Point { x: 503, y: 4 },
-        Point { x: 502, y: 4 },
-        Point { x: 502, y: 5 },
-        Point { x: 502, y: 6 },
-        Point { x: 502, y: 7 },
-        Point { x: 502, y: 8 },
-        Point { x: 502, y: 9 },
-        Point { x: 501, y: 9 },
-        Point { x: 500, y: 9 },
-        Point { x: 499, y: 9 },
-        Point { x: 498, y: 9 },
-        Point { x: 497, y: 9 },
-        Point { x: 496, y: 9 },
-        Point { x: 495, y: 9 },
-        Point { x: 494, y: 9 },
-    ];
-    let result = get_points_map(&input);
-    assert_eq!(expected.len(), result.len());
-    for i in 0..expected.len() {
-        assert_eq!(expected[i], result[i]);
-    }
 }
 
 fn get_proper_map(input: Vec<Point>) -> Vec<Vec<bool>> {
@@ -292,13 +196,6 @@ pub fn get_number_of_sand_units_that_settle(input: &str) -> u32 {
     count_sand_units_that_settle(while_condition, starting_sand_unit, map)
 }
 
-#[test]
-fn test_get_number_of_sand_units_that_settle() {
-    let input = get_input_for_tests();
-    let result = get_number_of_sand_units_that_settle(&input);
-    assert_eq!(24, result);
-}
-
 pub fn get_number_of_sand_units_that_settle_with_floor(input: &str) -> u32 {
     let mut raw_map = get_points_map(input);
     let starting_sand_unit = SandUnit {
@@ -328,9 +225,99 @@ pub fn get_number_of_sand_units_that_settle_with_floor(input: &str) -> u32 {
     count_sand_units_that_settle(while_condition, starting_sand_unit, map)
 }
 
-#[test]
-fn test_get_number_of_sand_units_that_settle_with_floor() {
-    let input = get_input_for_tests();
-    let result = get_number_of_sand_units_that_settle_with_floor(&input);
-    assert_eq!(93, result);
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const INPUT: &str = "\
+498,4 -> 498,6 -> 496,6
+503,4 -> 502,4 -> 502,9 -> 494,9";
+
+    #[test]
+    fn test_parse_input() {
+        let expected = vec![
+            Line {
+                start: Point { x: 498, y: 4 },
+                end: Point { x: 498, y: 6 },
+            },
+            Line {
+                start: Point { x: 498, y: 6 },
+                end: Point { x: 496, y: 6 },
+            },
+            Line {
+                start: Point { x: 503, y: 4 },
+                end: Point { x: 502, y: 4 },
+            },
+            Line {
+                start: Point { x: 502, y: 4 },
+                end: Point { x: 502, y: 9 },
+            },
+            Line {
+                start: Point { x: 502, y: 9 },
+                end: Point { x: 494, y: 9 },
+            },
+        ];
+        let result = parse_input(INPUT);
+        assert_eq!(expected.len(), result.len());
+        for i in 0..expected.len() {
+            assert_eq!(expected[i], result[i]);
+        }
+    }
+
+    #[test]
+    fn test_get_line_points() {
+        let line = Line {
+            start: Point { x: 503, y: 4 },
+            end: Point { x: 502, y: 4 },
+        };
+        let expected = vec![Point { x: 503, y: 4 }, Point { x: 502, y: 4 }];
+        let result = get_line_points(&line);
+        assert_eq!(expected.len(), result.len());
+        for i in 0..expected.len() {
+            assert_eq!(expected[i], result[i]);
+        }
+    }
+
+    #[test]
+    fn test_get_points_map() {
+        let expected = vec![
+            Point { x: 498, y: 4 },
+            Point { x: 498, y: 5 },
+            Point { x: 498, y: 6 },
+            Point { x: 497, y: 6 },
+            Point { x: 496, y: 6 },
+            Point { x: 503, y: 4 },
+            Point { x: 502, y: 4 },
+            Point { x: 502, y: 5 },
+            Point { x: 502, y: 6 },
+            Point { x: 502, y: 7 },
+            Point { x: 502, y: 8 },
+            Point { x: 502, y: 9 },
+            Point { x: 501, y: 9 },
+            Point { x: 500, y: 9 },
+            Point { x: 499, y: 9 },
+            Point { x: 498, y: 9 },
+            Point { x: 497, y: 9 },
+            Point { x: 496, y: 9 },
+            Point { x: 495, y: 9 },
+            Point { x: 494, y: 9 },
+        ];
+        let result = get_points_map(INPUT);
+        assert_eq!(expected.len(), result.len());
+        for i in 0..expected.len() {
+            assert_eq!(expected[i], result[i]);
+        }
+    }
+
+    #[test]
+    fn test_get_number_of_sand_units_that_settle() {
+        let result = get_number_of_sand_units_that_settle(INPUT);
+        assert_eq!(24, result);
+    }
+
+    #[test]
+    fn test_get_number_of_sand_units_that_settle_with_floor() {
+        let result = get_number_of_sand_units_that_settle_with_floor(INPUT);
+        assert_eq!(93, result);
+    }
 }
