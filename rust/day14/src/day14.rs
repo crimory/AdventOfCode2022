@@ -25,7 +25,7 @@ struct SandUnit {
 }
 
 fn parse_point(point: &str) -> Point {
-    let mut parts = point.split(",");
+    let mut parts = point.split(',');
     let x = parts.next().unwrap().parse::<u32>().unwrap();
     let y = parts.next().unwrap().parse::<u32>().unwrap();
     Point { x, y }
@@ -44,10 +44,8 @@ fn parse_line(line: &str) -> Vec<Line> {
 }
 
 fn parse_input(input: &str) -> Vec<Line> {
-    input
-        .lines()
-        .map(|line| parse_line(line))
-        .flatten()
+    input.lines()
+        .flat_map(parse_line)
         .collect::<Vec<Line>>()
 }
 
@@ -79,8 +77,7 @@ fn get_line_points(line: &Line) -> Vec<Point> {
 fn get_points_map(input: &str) -> Vec<Point> {
     let mut points = parse_input(input)
         .iter()
-        .map(|line| get_line_points(line))
-        .flatten()
+        .flat_map(get_line_points)
         .collect::<Vec<Point>>();
     points.dedup();
     points
