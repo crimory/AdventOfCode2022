@@ -65,7 +65,7 @@ fn get_map_sizes_by_dimension(map: &[Sensor], dimension: MapSizeDimension) -> Ve
 fn get_map_size(map: &[Sensor]) -> MapSize {
     let values_x = get_map_sizes_by_dimension(map, MapSizeDimension::X);
     let values_y = get_map_sizes_by_dimension(map, MapSizeDimension::Y);
-    let min_x = values_x.iter() .min().unwrap();
+    let min_x = values_x.iter().min().unwrap();
     let min_y = values_y.iter().min().unwrap();
     let max_x = values_x.iter().max().unwrap();
     let max_y = values_y.iter().max().unwrap();
@@ -87,11 +87,17 @@ fn get_length_to_closest_beacon(sensor: &Sensor) -> i32 {
     get_length_to_point(sensor.closest_beacon.x, sensor.closest_beacon.y, sensor)
 }
 
-fn is_position_occupied_and_not_a_beacon(x: i32, y: i32, map: &[Sensor]) -> bool {
+fn is_position_a_beacon(x: i32, y: i32, map: &[Sensor]) -> bool {
     for sensor in map {
         if sensor.closest_beacon.x == x && sensor.closest_beacon.y == y {
-            return false;
+            return true;
         }
+    }
+    false
+}
+
+fn is_position_occupied(x: i32, y: i32, map: &[Sensor]) -> bool {
+    for sensor in map {
         let length_to_point = get_length_to_point(x, y, sensor);
         let length_to_closest_beacon = get_length_to_closest_beacon(sensor);
         if length_to_point <= length_to_closest_beacon {
@@ -101,13 +107,112 @@ fn is_position_occupied_and_not_a_beacon(x: i32, y: i32, map: &[Sensor]) -> bool
     false
 }
 
-pub fn get_occupied_positions(y: i32, input: &str) -> i32 {
+pub fn get_occupied_positions_which_are_not_beacons(y: i32, input: &str) -> i32 {
     let map = read_input(input);
     let map_size = get_map_size(&map);
     (map_size.min_x..=map_size.max_x)
-        .map(|x| is_position_occupied_and_not_a_beacon(x, y, &map))
+        .filter(|&x| !is_position_a_beacon(x, y, &map))
+        .map(|x| is_position_occupied(x, y, &map))
         .filter(|occupied| *occupied)
         .count() as i32
+}
+
+pub fn get_tuning_frequency_for_distress_beacon_v1(
+    search_min: i32,
+    search_max: i32,
+    input: &str,
+) -> i64 {
+    let map = read_input(input);
+    for x in search_min..=search_max {
+        for y in search_min..=search_max {
+            if is_position_occupied(x, y, &map) {
+                continue;
+            }
+            return (x as i64) * 4_000_000 + (y as i64);
+        }
+    }
+    0
+}
+
+fn read_map_occupation(
+    search_min: i32,
+    search_max: i32,
+    map: &[Sensor]
+) -> Vec<Vec<bool>> {
+    let mut map_tests = vec![
+        vec![false; (search_max - search_min + 1) as usize];
+        (search_max - search_min + 1) as usize
+    ];
+    for sensor in map {
+        let length_to_closest_beacon = get_length_to_closest_beacon(sensor);
+        for y in (sensor.y-length_to_closest_beacon)..=(sensor.y+length_to_closest_beacon) {
+            let length_already_covered_by_y = (y - sensor.y).abs();
+            for x in (sensor.x-length_to_closest_beacon)..=(sensor.x+length_to_closest_beacon) {
+                if x<search_min || x>search_max || y<search_min || y>search_max {
+                    continue;
+                }
+                let length_to_be_covered_by_x = length_to_closest_beacon - length_already_covered_by_y;
+                if (x - sensor.x).abs() > length_to_be_covered_by_x {
+                    continue;
+                }
+
+                map_tests[(x as usize)][(y as usize)] = true;
+            }
+        }
+    }
+    map_tests
+}
+
+fn get_distress_beacon_position(map_occupation: Vec<Vec<bool>>) -> (i32, i32) {
+    for (x, row) in map_occupation.iter().enumerate() {
+        for (y, occupied) in row.iter().enumerate() {
+            if !occupied {
+                return (x as i32, y as i32);
+            }
+        }
+    }
+    (0, 0)
+}
+
+pub fn get_tuning_frequency_for_distress_beacon_v2(
+    search_min: i32,
+    search_max: i32,
+    input: &str,
+) -> i64 {
+    let map = read_input(input);
+    let map_occupation = read_map_occupation(search_min, search_max, &map);
+    let (x, y) = get_distress_beacon_position(map_occupation);
+    (x as i64) * 4_000_000 + (y as i64)
+}
+
+pub fn get_tuning_frequency_for_distress_beacon_v3(
+    search_min: i32,
+    search_max: i32,
+    input: &str,
+) -> i64 {
+    let sensors = read_input(input);
+    for y in search_min..=search_max {
+        let mut ranges = vec![];
+        for sensor in &sensors {
+            let length_to_beacon = get_length_to_closest_beacon(sensor);
+            let length_left = length_to_beacon - (y - sensor.y).abs();
+            if length_left < 0 {
+                continue;
+            }
+            ranges.push((sensor.x - length_left, sensor.x + length_left))
+        }
+        ranges.sort_by(|a, b| a.0.cmp(&b.0));
+        let mut max_x = search_min;
+        for range in ranges {
+            if range.0 > (max_x + 1) {
+                return ((max_x + 1) as i64) * 4_000_000 + (y as i64)
+            }
+            if range.1 > max_x {
+                max_x = range.1;
+            }
+        }
+    }
+    0
 }
 
 #[cfg(test)]
@@ -258,27 +363,45 @@ Sensor at x=20, y=1: closest beacon is at x=15, y=3";
     #[test]
     fn is_position_occupied_true_correctly() {
         let map = read_input(INPUT);
-        let result = is_position_occupied_and_not_a_beacon(-1, 9, &map);
+        let result = is_position_occupied(-1, 9, &map);
         assert!(result);
     }
 
     #[test]
     fn is_position_occupied_false_correctly() {
         let map = read_input(INPUT);
-        let result = is_position_occupied_and_not_a_beacon(-2, 9, &map);
+        let result = is_position_occupied(-2, 9, &map);
         assert!(!result);
     }
 
     #[test]
-    fn is_position_occupied_false_as_beacon_correctly() {
+    fn is_position_a_beacon_correctly() {
         let map = read_input(INPUT);
-        let result = is_position_occupied_and_not_a_beacon(2, 10, &map);
-        assert!(!result);
+        let result = is_position_a_beacon(2, 10, &map);
+        assert!(result);
     }
 
     #[test]
     fn get_occupied_positions_correctly() {
-        let result = get_occupied_positions(10, INPUT);
+        let result = get_occupied_positions_which_are_not_beacons(10, INPUT);
         assert_eq!(26, result)
+    }
+
+    #[test]
+    fn get_tuning_frequency_for_distress_beacon_v1_correctly() {
+        let result = get_tuning_frequency_for_distress_beacon_v1(0, 20, INPUT);
+        assert_eq!(56_000_011, result)
+    }
+
+    #[test]
+    fn get_tuning_frequency_for_distress_beacon_v2_correctly() {
+        let result = get_tuning_frequency_for_distress_beacon_v2(0, 20, INPUT);
+        assert_eq!(56_000_011, result)
+    }
+
+    #[test]
+    fn get_tuning_frequency_for_distress_beacon_v3_correctly() {
+        let result = get_tuning_frequency_for_distress_beacon_v3(0, 20, INPUT);
+        assert_eq!(56_000_011, result)
     }
 }
