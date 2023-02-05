@@ -57,10 +57,10 @@ pub fn is_position_a_beacon(x: i32, y: i32, map: &[input::Sensor]) -> bool {
     false
 }
 
-pub fn is_position_occupied(x: i32, y: i32, map: &[input::Sensor]) -> bool {
+pub fn is_position_covered(x: i32, y: i32, map: &[input::Sensor]) -> bool {
     for sensor in map {
         let length_to_point = get_length_to_point(x, y, sensor);
-        if length_to_point <= sensor.length_to_closest_beacon {
+        if length_to_point <= sensor.get_length_to_beacon() {
             return true;
         }
     }
@@ -70,7 +70,7 @@ pub fn is_position_occupied(x: i32, y: i32, map: &[input::Sensor]) -> bool {
 pub fn get_sorted_x_ranges_for_specific_y(y: i32, sensors: &[input::Sensor]) -> Vec<(i32, i32)> {
     let mut ranges = vec![];
     for sensor in sensors {
-        let length_left = sensor.length_to_closest_beacon - (y - sensor.y).abs();
+        let length_left = sensor.get_length_to_beacon() - (y - sensor.y).abs();
         if length_left < 0 {
             continue;
         }
@@ -108,14 +108,14 @@ mod tests {
     #[test]
     fn is_position_occupied_true_correctly() {
         let map = input::read_input(input::tests::INPUT);
-        let result = is_position_occupied(-1, 9, &map);
+        let result = is_position_covered(-1, 9, &map);
         assert!(result);
     }
 
     #[test]
     fn is_position_occupied_false_correctly() {
         let map = input::read_input(input::tests::INPUT);
-        let result = is_position_occupied(-2, 9, &map);
+        let result = is_position_covered(-2, 9, &map);
         assert!(!result);
     }
 

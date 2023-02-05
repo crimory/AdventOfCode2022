@@ -10,15 +10,11 @@ enum StepAction {
 
 fn paths_to_valve_next_steps(
     paths: &Vec<Vec<String>>,
-    target_valve: &str,
     map: &HashMap<String, input::Valve>,
 ) -> Vec<Vec<String>> {
     let mut output_paths = Vec::new();
     for path in paths {
         let current_valve = map.get(path.last().unwrap()).unwrap();
-        if current_valve.name == target_valve {
-            continue;
-        }
         let previous_valve = if path.len() > 1 {
             path.get(path.len() - 2).unwrap()
         } else {
@@ -44,7 +40,7 @@ fn best_path_to_valve(
 ) -> Vec<String> {
     let mut paths = vec![vec![current_position.to_owned()]];
     while !paths.iter().any(|p| p.last().unwrap() == target_valve) {
-        paths = paths_to_valve_next_steps(&paths, target_valve, map);
+        paths = paths_to_valve_next_steps(&paths, map);
     }
     (*paths
         .iter()

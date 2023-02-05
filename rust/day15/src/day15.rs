@@ -6,8 +6,8 @@ pub fn get_occupied_positions_which_are_not_beacons(y: i32, input: &str) -> i32 
     let map_size = map::get_map_size(&map);
     (map_size.min_x..=map_size.max_x)
         .filter(|&x| !map::is_position_a_beacon(x, y, &map))
-        .map(|x| map::is_position_occupied(x, y, &map))
-        .filter(|occupied| *occupied)
+        .map(|x| map::is_position_covered(x, y, &map))
+        .filter(|&occupied| occupied)
         .count() as i32
 }
 

@@ -9,11 +9,11 @@ pub struct Sensor {
     pub x: i32,
     pub y: i32,
     pub closest_beacon: Beacon,
-    pub length_to_closest_beacon: i32,
+    length_to_closest_beacon: i32,
 }
 impl Sensor {
-    pub fn new(sensor_x: i32, sensor_y: i32, beacon_x: i32, beacon_y: i32) -> Sensor {
-        Sensor {
+    pub fn new(sensor_x: i32, sensor_y: i32, beacon_x: i32, beacon_y: i32) -> Self {
+        Self {
             x: sensor_x,
             y: sensor_y,
             closest_beacon: Beacon {
@@ -24,6 +24,9 @@ impl Sensor {
                 sensor_x, sensor_y, beacon_x, beacon_y,
             ),
         }
+    }
+    pub fn get_length_to_beacon(&self) -> i32 {
+        self.length_to_closest_beacon
     }
 }
 
