@@ -130,7 +130,7 @@ fn clone_map(map: &HashMap<String, input::Valve>) -> HashMap<String, input::Valv
     output
 }
 
-const MAX_ITEMS: usize = 50;
+const MAX_ITEMS: usize = 500;
 pub fn get_max_pressure_within_minutes(minutes: u32, map: &HashMap<String, input::Valve>) -> u32 {
     let mut all_moves = vec![StepsAndTheirMap {
         steps: vec![StepAction::Move("AA".to_owned())],
@@ -146,21 +146,16 @@ pub fn get_max_pressure_within_minutes(minutes: u32, map: &HashMap<String, input
                 next_steps
                     .iter()
                     .map(|s| {
+                        let mut map = clone_map(&m.map);
+                        let mut pressure_being_released = m.pressure_being_released;
                         if let StepAction::OpenValve(opened) = s.last().unwrap() {
-                            let mut map = clone_map(&m.map);
                             map.get_mut(opened).unwrap().opened = true;
-                            return StepsAndTheirMap {
-                                steps: s.to_owned(),
-                                map,
-                                pressure_being_released: m.pressure_being_released
-                                    + m.map.get(opened).unwrap().flow_rate,
-                                pressure_released: m.pressure_released + m.pressure_being_released,
-                            };
+                            pressure_being_released += map.get(opened).unwrap().flow_rate;
                         }
                         StepsAndTheirMap {
                             steps: s.to_owned(),
-                            map: clone_map(&m.map),
-                            pressure_being_released: m.pressure_being_released,
+                            map,
+                            pressure_being_released,
                             pressure_released: m.pressure_released + m.pressure_being_released,
                         }
                     })
@@ -187,6 +182,125 @@ pub fn get_max_pressure_within_minutes(minutes: u32, map: &HashMap<String, input
             })
             .map(|m| m.to_owned())
             .collect::<Vec<StepsAndTheirMap>>();
+        if all_moves.len() > MAX_ITEMS {
+            all_moves.sort_by(|a, b| b.pressure_released.cmp(&a.pressure_released));
+            all_moves = all_moves[0..MAX_ITEMS].to_vec();
+        }
+    }
+    all_moves.sort_by(|a, b| b.pressure_released.cmp(&a.pressure_released));
+    all_moves.first().unwrap().pressure_released
+}
+
+#[derive(Clone)]
+struct StepsForTwoActors {
+    steps: (Vec<StepAction>, Vec<StepAction>),
+    map: HashMap<String, input::Valve>,
+    pressure_released: u32,
+    pressure_being_released: u32,
+}
+
+fn combine_steps(
+    your_steps: &Vec<Vec<StepAction>>,
+    elephant_steps: &Vec<Vec<StepAction>>,
+) -> Vec<(Vec<StepAction>, Vec<StepAction>)> {
+    let mut output = vec![];
+    for yours in your_steps {
+        for elephants in elephant_steps {
+            let a = output.contains(&(yours.to_owned(), elephants.to_owned()));
+            let b = output.contains(&(elephants.to_owned(), yours.to_owned()));
+            if a || b {
+                continue;
+            }
+            output.push((yours.to_owned(), elephants.to_owned()));
+        }
+    }
+    output
+        .iter()
+        .filter(|(l, r)| l != r)
+        .map(|(l, r)| (l.to_owned(), r.to_owned()))
+        .collect::<Vec<(Vec<StepAction>, Vec<StepAction>)>>()
+}
+
+pub fn get_max_pressure_for_two(minutes: u32, map: &HashMap<String, input::Valve>) -> u32 {
+    let mut all_moves = vec![StepsForTwoActors {
+        steps: (
+            vec![StepAction::Move("AA".to_owned())],
+            vec![StepAction::Move("AA".to_owned())],
+        ),
+        map: clone_map(map),
+        pressure_released: 0,
+        pressure_being_released: 0,
+    }];
+    for _ in 1..=minutes {
+        all_moves = all_moves
+            .iter()
+            .flat_map(|m| {
+                let your_next_steps = get_next_steps(&m.steps.0, &m.map);
+                let elephant_next_steps = get_next_steps(&m.steps.1, &m.map);
+                let next_steps = combine_steps(&your_next_steps, &elephant_next_steps);
+                next_steps
+                    .iter()
+                    .map(|s| {
+                        let mut pressure_being_released = m.pressure_being_released;
+                        let mut map = clone_map(&m.map);
+                        if let StepAction::OpenValve(opened1) = s.0.last().unwrap() {
+                            let opened_valve = map.get_mut(opened1).unwrap();
+                            if !opened_valve.opened {
+                                opened_valve.opened = true;
+                                pressure_being_released += opened_valve.flow_rate;
+                            }
+                        }
+                        if let StepAction::OpenValve(opened2) = s.1.last().unwrap() {
+                            let opened_valve = map.get_mut(opened2).unwrap();
+                            if !opened_valve.opened {
+                                opened_valve.opened = true;
+                                pressure_being_released += opened_valve.flow_rate;
+                            }
+                        }
+                        StepsForTwoActors {
+                            steps: s.to_owned(),
+                            map,
+                            pressure_being_released,
+                            pressure_released: m.pressure_released + m.pressure_being_released,
+                        }
+                    })
+                    .collect::<Vec<StepsForTwoActors>>()
+            })
+            .collect::<Vec<StepsForTwoActors>>();
+        all_moves = all_moves
+            .iter()
+            .filter(|m| {
+                if m.steps.0.len() < 3 || m.steps.1.len() < 3 {
+                    return true;
+                }
+                {
+                    let last = m.steps.0.last().unwrap();
+                    let second_last = m.steps.0.get(m.steps.0.len() - 2).unwrap();
+                    let third_last = m.steps.0.get(m.steps.0.len() - 3).unwrap();
+                    if let (StepAction::Move(l), StepAction::Move(_), StepAction::Move(tl)) =
+                        (last, second_last, third_last)
+                    {
+                        if l == tl {
+                            return false;
+                        }
+                    }
+                }
+                {
+                    let last = m.steps.1.last().unwrap();
+                    let second_last = m.steps.1.get(m.steps.1.len() - 2).unwrap();
+                    let third_last = m.steps.1.get(m.steps.1.len() - 3).unwrap();
+                    if let (StepAction::Move(l), StepAction::Move(_), StepAction::Move(tl)) =
+                        (last, second_last, third_last)
+                    {
+                        if l == tl {
+                            return false;
+                        }
+                    }
+                }
+                true
+            })
+            .map(|m| m.to_owned())
+            .collect::<Vec<StepsForTwoActors>>();
         if all_moves.len() > MAX_ITEMS {
             all_moves.sort_by(|a, b| b.pressure_released.cmp(&a.pressure_released));
             all_moves = all_moves[0..MAX_ITEMS].to_vec();
@@ -289,5 +403,12 @@ pub mod tests {
         let map = input::read_input(input::tests::INPUT);
         let result = get_max_pressure_within_minutes(30, &map);
         assert_eq!(1651, result);
+    }
+
+    #[test]
+    fn get_max_pressure_for_two_test() {
+        let map = input::read_input(input::tests::INPUT);
+        let result = get_max_pressure_for_two(26, &map);
+        assert_eq!(1707, result);
     }
 }
