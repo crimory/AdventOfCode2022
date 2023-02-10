@@ -17,7 +17,7 @@ pub struct Map {
 }
 impl Map {
     pub fn get_valve_by_index(&self, index: &u32) -> &Valve {
-        self.valves.iter().filter(|v| v.index == *index).next().unwrap()
+        self.valves.iter().find(|v| v.index == *index).unwrap()
     }
 }
 
@@ -37,7 +37,7 @@ fn read_input_line(input: &str) -> ValveInternal {
     }
 }
 
-fn get_index(labels: &Vec<String>, value: &str) -> u32 {
+fn get_index(labels: &[String], value: &str) -> u32 {
     labels.iter().position(|s| s == value).unwrap() as u32
 }
 

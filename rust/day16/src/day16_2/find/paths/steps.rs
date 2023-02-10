@@ -63,7 +63,7 @@ pub fn get_next_steps(
             valves_left_to_open
                 .iter()
                 .map(|t| {
-                    let path = best_path_to_valve(v, t, &map);
+                    let path = best_path_to_valve(v, t, map);
                     let new_move = if path.len() == 1 {
                         find::StepAction::OpenValve(*t)
                     } else {

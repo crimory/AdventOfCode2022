@@ -47,7 +47,7 @@ pub fn get_max_pressure_within_minutes(minutes: u32, map: &input::Map) -> u32 {
 pub fn get_max_pressure_for_two(minutes: u32, map: &input::Map) -> u32 {
     let mut all_moves = vec![StepsAndAccompanyingValues::new(0, 2, map); 1];
     for _ in 1..=minutes {
-        all_moves = paths::enrich_moves_with_next_step(all_moves, map);
+        all_moves = paths::enrich_moves_with_next_step_for_two(all_moves, map);
         all_moves = paths::filter_out_back_and_forth_moves(all_moves);
         all_moves = paths::get_maximum_number_of_moves(all_moves, MAX_ITEMS);
     }
