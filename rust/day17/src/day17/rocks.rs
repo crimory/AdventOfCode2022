@@ -2,8 +2,8 @@ use crate::day17::map;
 
 #[derive(Debug, PartialEq, Clone, Eq, Hash)]
 pub struct Point {
-    pub x: u32,
-    pub y: u32,
+    pub x: u64,
+    pub y: u64,
 }
 
 pub enum Side {
@@ -48,6 +48,9 @@ impl ShapeState {
                     }
                     ShapeMove::Down => {
                         new_shape.anchor.y -= 1;
+                        if new_shape.anchor.y < map.get_lowest_point() {
+                            panic!("Shape fell through the map!")
+                        }
                         if map.are_points_free(&new_shape) {
                             *self = ShapeState::Falling(new_shape)
                         } else {

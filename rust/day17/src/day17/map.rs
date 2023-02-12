@@ -1,12 +1,12 @@
 use crate::day17::rocks;
 use std::collections::HashMap;
 
-const MAX_MAP_HEIGHT: u32 = 50;
-const LEFT_WALL_X: u32 = 0;
-const RIGHT_WALL_X: u32 = 8;
-const FLOOR_Y: u32 = 0;
-const MAP_Y_GROWTH: u32 = 4;
-const MAP_X_SHAPE_SPAWN: u32 = 3;
+const MAX_MAP_HEIGHT: u64 = 50;
+const LEFT_WALL_X: u64 = 0;
+const RIGHT_WALL_X: u64 = 8;
+const FLOOR_Y: u64 = 0;
+const MAP_Y_GROWTH: u64 = 4;
+const MAP_X_SHAPE_SPAWN: u64 = 3;
 
 pub struct Map {
     occupied_spaces: HashMap<rocks::Point, bool>,
@@ -26,12 +26,19 @@ impl Map {
         }
         self.grow_map_accordingly();
     }
-    pub fn get_current_height(&self) -> u32 {
+    pub fn get_current_height(&self) -> u64 {
         self.occupied_spaces
             .iter()
             .filter(|(p, occupied)| p.x != LEFT_WALL_X && p.x != RIGHT_WALL_X && **occupied)
             .map(|(p, _)| p.y)
             .max()
+            .unwrap()
+    }
+    pub fn get_lowest_point(&self) -> u64 {
+        self.occupied_spaces
+            .keys()
+            .map(|p| p.y)
+            .min()
             .unwrap()
     }
     fn build_floor(&mut self) {
