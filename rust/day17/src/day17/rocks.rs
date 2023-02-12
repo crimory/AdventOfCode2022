@@ -28,10 +28,9 @@ enum ShapeState {
     Falling(Shape),
 }
 impl ShapeState {
-    fn move_shape(&self, movement: ShapeMove) -> ShapeState {
+    fn move_shape(self, movement: ShapeMove) -> ShapeState {
         match self {
-            ShapeState::Settled(_) =>
-                self.clone(),
+            ShapeState::Settled(_) => self,
             ShapeState::Falling(shape) => {
                 let mut new_shape = shape.clone();
                 match movement {
@@ -39,26 +38,26 @@ impl ShapeState {
                         match side {
                             Side::Left => {
                                 new_shape.anchor.x -= 1;
-                                if new_shape.anchor.x <= LEFT_WALL_X {
-                                    return ShapeState::Falling(shape.clone());
+                                if new_shape.anchor.x == LEFT_WALL_X {
+                                    return ShapeState::Falling(shape);
                                 }
-                            },
+                            }
                             Side::Right => {
                                 new_shape.anchor.x += 1;
                                 if new_shape.anchor.x >= RIGHT_WALL_X {
-                                    return ShapeState::Falling(shape.clone());
+                                    return ShapeState::Falling(shape);
                                 }
-                            },
+                            }
                         }
                         ShapeState::Falling(new_shape)
-                    },
+                    }
                     ShapeMove::Down => {
                         new_shape.anchor.y -= 1;
-                        if new_shape.anchor.y <= FLOOR_Y {
+                        if new_shape.anchor.y == FLOOR_Y {
                             return ShapeState::Settled(shape.to_settled());
                         }
                         ShapeState::Falling(new_shape)
-                    },
+                    }
                 }
             }
         }
@@ -72,11 +71,17 @@ struct Shape {
 }
 impl Shape {
     fn to_settled(&self) -> SettledShape {
-        SettledShape { points: self.get_current_points() }
+        SettledShape {
+            points: self.get_current_points(),
+        }
     }
     fn get_current_points(&self) -> Vec<Point> {
-        self.points.iter()
-            .map(|p| Point { x: p.x + self.anchor.x, y: p.y + self.anchor.y })
+        self.points
+            .iter()
+            .map(|p| Point {
+                x: p.x + self.anchor.x,
+                y: p.y + self.anchor.y,
+            })
             .collect()
     }
 }
@@ -91,18 +96,48 @@ enum RockKind {
 }
 impl RockKind {
     fn to_shape(&self, anchor: &Point) -> Option<Shape> {
-        if anchor.x <= LEFT_WALL_X || anchor.x >= RIGHT_WALL_X {
+        if anchor.x == LEFT_WALL_X || anchor.x >= RIGHT_WALL_X {
             return None;
         }
 
         let points = match self {
-            RockKind::Horizontal => vec![Point { x: 0, y: 0 }, Point { x: 1, y: 0 }, Point { x: 2, y: 0 }, Point { x: 3, y: 0 }],
-            RockKind::Plus => vec![Point { x: 1, y: 0 }, Point { x: 0, y: 1 }, Point { x: 1, y: 1 }, Point { x: 2, y: 1 }, Point { x: 1, y: 2 }],
-            RockKind::Corner => vec![Point { x: 0, y: 0 }, Point { x: 1, y: 0 }, Point { x: 2, y: 0 }, Point { x: 2, y: 1 }, Point { x: 2, y: 2 }],
-            RockKind::Vertical => vec![Point { x: 0, y: 0 }, Point { x: 0, y: 1 }, Point { x: 0, y: 2 }, Point { x: 0, y: 3 }],
-            RockKind::Box => vec![Point { x: 0, y: 0 }, Point { x: 1, y: 0 }, Point { x: 0, y: 1 }, Point { x: 1, y: 1 }],
+            RockKind::Horizontal => vec![
+                Point { x: 0, y: 0 },
+                Point { x: 1, y: 0 },
+                Point { x: 2, y: 0 },
+                Point { x: 3, y: 0 },
+            ],
+            RockKind::Plus => vec![
+                Point { x: 1, y: 0 },
+                Point { x: 0, y: 1 },
+                Point { x: 1, y: 1 },
+                Point { x: 2, y: 1 },
+                Point { x: 1, y: 2 },
+            ],
+            RockKind::Corner => vec![
+                Point { x: 0, y: 0 },
+                Point { x: 1, y: 0 },
+                Point { x: 2, y: 0 },
+                Point { x: 2, y: 1 },
+                Point { x: 2, y: 2 },
+            ],
+            RockKind::Vertical => vec![
+                Point { x: 0, y: 0 },
+                Point { x: 0, y: 1 },
+                Point { x: 0, y: 2 },
+                Point { x: 0, y: 3 },
+            ],
+            RockKind::Box => vec![
+                Point { x: 0, y: 0 },
+                Point { x: 1, y: 0 },
+                Point { x: 0, y: 1 },
+                Point { x: 1, y: 1 },
+            ],
         };
-        Some(Shape { points, anchor: anchor.clone() })
+        Some(Shape {
+            points,
+            anchor: anchor.clone(),
+        })
     }
 }
 
@@ -165,8 +200,8 @@ mod tests {
         ];
         assert_eq!(current_points, expected_current_points);
 
-        let current_shape = ShapeState::Falling(shape);
-        let current_shape = current_shape.move_shape(ShapeMove::Sideways(Side::Right));
+        let mut current_shape = ShapeState::Falling(shape);
+        current_shape = current_shape.move_shape(ShapeMove::Sideways(Side::Right));
         if let ShapeState::Falling(falling_shape) = &current_shape {
             let current_points = falling_shape.get_current_points();
             let expected_current_points = vec![
@@ -180,7 +215,7 @@ mod tests {
             panic!("Expected ShapeState::Falling");
         }
 
-        let current_shape = current_shape.move_shape(ShapeMove::Sideways(Side::Left));
+        current_shape = current_shape.move_shape(ShapeMove::Sideways(Side::Left));
         if let ShapeState::Falling(falling_shape) = &current_shape {
             let current_points = falling_shape.get_current_points();
             let expected_current_points = vec![
@@ -194,7 +229,7 @@ mod tests {
             panic!("Expected ShapeState::Falling");
         }
 
-        let current_shape = current_shape.move_shape(ShapeMove::Sideways(Side::Left));
+        current_shape = current_shape.move_shape(ShapeMove::Sideways(Side::Left));
         if let ShapeState::Falling(falling_shape) = &current_shape {
             let current_points = falling_shape.get_current_points();
             let expected_current_points = vec![
@@ -208,7 +243,7 @@ mod tests {
             panic!("Expected ShapeState::Falling");
         }
 
-        let current_shape = current_shape.move_shape(ShapeMove::Down);
+        current_shape = current_shape.move_shape(ShapeMove::Down);
         if let ShapeState::Falling(falling_shape) = &current_shape {
             let current_points = falling_shape.get_current_points();
             let expected_current_points = vec![
