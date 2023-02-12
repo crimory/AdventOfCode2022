@@ -1,10 +1,10 @@
 #[derive(Debug, PartialEq)]
-enum AirJetBlowingDirection {
+pub enum AirJetBlowingDirection {
     Left,
     Right,
 }
 
-struct AirJets {
+pub struct AirJets {
     index: usize,
     air_jets: Vec<AirJetBlowingDirection>,
 }
@@ -12,14 +12,14 @@ impl AirJets {
     fn new(air_jets: Vec<AirJetBlowingDirection>) -> Self {
         Self { index: 0, air_jets }
     }
-    fn next(&mut self) -> &AirJetBlowingDirection {
+    pub fn next(&mut self) -> &AirJetBlowingDirection {
         let result = self.air_jets.get(self.index);
         self.index = (self.index + 1) % self.air_jets.len();
         result.unwrap()
     }
 }
 
-fn read_input(input: &str) -> AirJets {
+pub fn read_input(input: &str) -> AirJets {
     let directions = input
         .chars()
         .map(|c| match c {
