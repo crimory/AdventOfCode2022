@@ -47,10 +47,11 @@ impl ShapeState {
                         *self = ShapeState::Falling(new_shape)
                     }
                     ShapeMove::Down => {
-                        new_shape.anchor.y -= 1;
-                        if new_shape.anchor.y < map.get_lowest_point() {
-                            panic!("Shape fell through the map!")
+                        if shape.anchor.y == 0 {
+                            *self = ShapeState::Settled(shape.to_settled());
+                            return;
                         }
+                        new_shape.anchor.y -= 1;
                         if map.are_points_free(&new_shape) {
                             *self = ShapeState::Falling(new_shape)
                         } else {
@@ -155,6 +156,12 @@ impl RockSource {
         let result = self.kinds.get(self.index);
         self.index = (self.index + 1) % self.kinds.len();
         result.unwrap()
+    }
+    pub fn current_index(&self) -> usize {
+        self.index
+    }
+    pub fn advance_index(&mut self, steps: u64) {
+        self.index = (self.index + steps as usize) % self.kinds.len();
     }
 }
 

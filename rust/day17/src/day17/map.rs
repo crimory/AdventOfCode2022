@@ -1,13 +1,13 @@
 use crate::day17::rocks;
 use std::collections::HashMap;
 
-const MAX_MAP_HEIGHT: u64 = 50;
 const LEFT_WALL_X: u64 = 0;
 const RIGHT_WALL_X: u64 = 8;
 const FLOOR_Y: u64 = 0;
 const MAP_Y_GROWTH: u64 = 4;
 const MAP_X_SHAPE_SPAWN: u64 = 3;
 
+#[derive(Clone)]
 pub struct Map {
     occupied_spaces: HashMap<rocks::Point, bool>,
 }
@@ -34,13 +34,6 @@ impl Map {
             .max()
             .unwrap()
     }
-    pub fn get_lowest_point(&self) -> u64 {
-        self.occupied_spaces
-            .keys()
-            .map(|p| p.y)
-            .min()
-            .unwrap()
-    }
     fn build_floor(&mut self) {
         for x in LEFT_WALL_X..=RIGHT_WALL_X {
             self.occupied_spaces
@@ -55,14 +48,29 @@ impl Map {
                 self.occupied_spaces.insert(rocks::Point { x, y }, occupied);
             }
         }
-        self.retain_top_of_the_map();
     }
-    fn retain_top_of_the_map(&mut self) {
-        let current_height = self.get_current_height();
-        if current_height > MAX_MAP_HEIGHT {
-            self.occupied_spaces
-                .retain(|point, _| point.y > (current_height - MAX_MAP_HEIGHT));
+    pub fn retain_top_of_the_map(&mut self) -> u64 {
+        let current_heights = self.get_current_heights();
+        let minimum = *current_heights.iter().min().unwrap();
+        self.occupied_spaces
+            .retain(|point, _| point.y >= minimum);
+        if minimum == 0 {
+            return 0;
         }
+        let new_occupied_spaces = self.occupied_spaces
+            .iter()
+            .map(|(point, occupied)| {
+                (
+                    rocks::Point {
+                        x: point.x,
+                        y: point.y - minimum,
+                    },
+                    *occupied,
+                )
+            })
+            .collect();
+        self.occupied_spaces = new_occupied_spaces;
+        minimum
     }
     pub fn are_points_free(&self, shape: &rocks::Shape) -> bool {
         let points = shape.get_current_points();
@@ -76,6 +84,20 @@ impl Map {
             x: MAP_X_SHAPE_SPAWN,
             y: self.get_current_height() + MAP_Y_GROWTH,
         }
+    }
+    pub fn get_current_heights(&self) -> Vec<u64> {
+        let mut result_current_height = vec![];
+        for x in (LEFT_WALL_X+1)..=(RIGHT_WALL_X-1) {
+            let height = self
+                .occupied_spaces
+                .iter()
+                .filter(|(p, occupied)| p.x == x && **occupied)
+                .map(|(p, _)| p.y)
+                .max()
+                .unwrap();
+            result_current_height.push(height);
+        }
+        result_current_height
     }
 }
 

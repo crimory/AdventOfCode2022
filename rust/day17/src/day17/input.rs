@@ -17,6 +17,12 @@ impl AirJets {
         self.index = (self.index + 1) % self.air_jets.len();
         result.unwrap()
     }
+    pub fn current_index(&self) -> usize {
+        self.index
+    }
+    pub fn advance_index(&mut self, steps: u64) {
+        self.index = (self.index + steps as usize) % self.air_jets.len();
+    }
 }
 
 pub fn read_input(input: &str) -> AirJets {
