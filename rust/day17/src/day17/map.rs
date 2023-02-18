@@ -51,12 +51,16 @@ impl Map {
     }
     pub fn retain_top_of_the_map(&mut self) -> u64 {
         let current_heights = self.get_current_heights();
-        let minimum = *current_heights.iter().min().unwrap();
-        self.occupied_spaces
-            .retain(|point, _| point.y >= minimum);
-        if minimum == 0 {
+        let mut minimum = *current_heights.iter().min().unwrap();
+
+        // leave some floor
+        if minimum <= MAP_Y_GROWTH {
             return 0;
         }
+        minimum -= MAP_Y_GROWTH;
+
+        self.occupied_spaces
+            .retain(|point, _| point.y >= minimum);
         let new_occupied_spaces = self.occupied_spaces
             .iter()
             .map(|(point, occupied)| {
