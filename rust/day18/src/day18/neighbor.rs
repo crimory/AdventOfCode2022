@@ -1,7 +1,7 @@
 use crate::day18::input;
 
-pub fn get_number_of_neighbours(target: &input::Coordinates, input: &Vec<input::Coordinates>) -> usize {
-    let potential_neighbours = vec![
+pub fn get_number_of_neighbors(target: &input::Coordinates, input: &Vec<input::Coordinates>) -> usize {
+    let potential_neighbors = vec![
         input::Coordinates {
             x: target.x,
             y: target.y,
@@ -33,9 +33,9 @@ pub fn get_number_of_neighbours(target: &input::Coordinates, input: &Vec<input::
             z: target.z,
         },
     ];
-    potential_neighbours
+    potential_neighbors
         .iter()
-        .filter(|neighbour| input.contains(neighbour))
+        .filter(|neighbor| input.contains(neighbor))
         .count()
 }
 
@@ -46,14 +46,14 @@ mod tests {
     #[test]
     fn number_of_neighbours_0() {
         let input = input::tests::get_expected_coords();
-        let result = get_number_of_neighbours(&input[0], &input);
+        let result = get_number_of_neighbors(&input[0], &input);
         assert_eq!(result, 6);
     }
 
     #[test]
     fn number_of_neighbours_1() {
         let input = input::tests::get_expected_coords();
-        let result = get_number_of_neighbours(&input[1], &input);
+        let result = get_number_of_neighbors(&input[1], &input);
         assert_eq!(result, 1);
     }
 }
