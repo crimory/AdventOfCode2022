@@ -1,5 +1,3 @@
-use crate::day17::map;
-
 #[derive(Debug, PartialEq, Clone, Eq, Hash)]
 pub struct Point {
     pub x: u64,
@@ -26,7 +24,11 @@ pub enum ShapeState {
     Falling(Shape),
 }
 impl ShapeState {
-    pub fn move_shape(&mut self, movement: ShapeMove, map: &map::Map) {
+    pub fn move_shape<F>(
+            &mut self,
+            movement: ShapeMove,
+            are_points_free: F
+    ) where F: Fn(Vec<Point>) -> bool {
         match self {
             ShapeState::Settled(_) => (),
             ShapeState::Falling(shape) => {
@@ -41,7 +43,7 @@ impl ShapeState {
                                 new_shape.anchor.x += 1;
                             }
                         };
-                        if !map.are_points_free(&new_shape) {
+                        if !are_points_free(new_shape.get_current_points()) {
                             return;
                         }
                         *self = ShapeState::Falling(new_shape)
@@ -52,7 +54,7 @@ impl ShapeState {
                             return;
                         }
                         new_shape.anchor.y -= 1;
-                        if map.are_points_free(&new_shape) {
+                        if are_points_free(new_shape.get_current_points()) {
                             *self = ShapeState::Falling(new_shape)
                         } else {
                             *self = ShapeState::Settled(shape.to_settled());
@@ -201,10 +203,9 @@ mod tests {
             Point { x: 4, y: 3 },
         ];
         assert_eq!(current_points, expected_current_points);
-        let map = map::Map::new();
 
         let mut current_shape = ShapeState::Falling(shape);
-        current_shape.move_shape(ShapeMove::Sideways(Side::Right), &map);
+        current_shape.move_shape(ShapeMove::Sideways(Side::Right), |_| true);
         if let ShapeState::Falling(falling_shape) = &current_shape {
             let current_points = falling_shape.get_current_points();
             let expected_current_points = vec![
@@ -218,7 +219,7 @@ mod tests {
             panic!("Expected ShapeState::Falling");
         }
 
-        current_shape.move_shape(ShapeMove::Sideways(Side::Left), &map);
+        current_shape.move_shape(ShapeMove::Sideways(Side::Left), |_| true);
         if let ShapeState::Falling(falling_shape) = &current_shape {
             let current_points = falling_shape.get_current_points();
             let expected_current_points = vec![
@@ -232,7 +233,7 @@ mod tests {
             panic!("Expected ShapeState::Falling");
         }
 
-        current_shape.move_shape(ShapeMove::Sideways(Side::Left), &map);
+        current_shape.move_shape(ShapeMove::Sideways(Side::Left), |_| false);
         if let ShapeState::Falling(falling_shape) = &current_shape {
             let current_points = falling_shape.get_current_points();
             let expected_current_points = vec![
@@ -246,7 +247,7 @@ mod tests {
             panic!("Expected ShapeState::Falling");
         }
 
-        current_shape.move_shape(ShapeMove::Down, &map);
+        current_shape.move_shape(ShapeMove::Down, |_| true);
         if let ShapeState::Falling(falling_shape) = &current_shape {
             let current_points = falling_shape.get_current_points();
             let expected_current_points = vec![

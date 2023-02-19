@@ -76,8 +76,7 @@ impl Map {
         self.occupied_spaces = new_occupied_spaces;
         minimum
     }
-    pub fn are_points_free(&self, shape: &rocks::Shape) -> bool {
-        let points = shape.get_current_points();
+    pub fn are_points_free(&self, points: Vec<rocks::Point>) -> bool {
         points.iter().all(|point| {
             let occupied_space = self.occupied_spaces.get(point);
             occupied_space == Some(&false) || occupied_space.is_none()
@@ -191,7 +190,7 @@ mod tests {
         map.add_settled_shape(settled);
         map.grow_map_accordingly();
         let new_shape = rocks::RockKind::Horizontal.to_shape(&rocks::Point { x: 3, y: 2 });
-        let result = map.are_points_free(&new_shape);
+        let result = map.are_points_free(new_shape.get_current_points());
         assert_eq!(result, false);
     }
 }

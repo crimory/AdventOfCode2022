@@ -17,11 +17,12 @@ fn inner_progress_single_rock(
     air_jets: &mut input::AirJets,
 ) -> u64 {
     let new_rock_position = map.get_new_shape_position();
+    let are_points_free = |points| map.are_points_free(points);
     let mut rock = rocks::ShapeState::Falling(rock_source.next().to_shape(&new_rock_position));
     let mut air_jets_advance = 0;
     while let rocks::ShapeState::Falling(_) = &rock {
-        rock.move_shape(get_rocks_sideways_movement(air_jets.next()), &map);
-        rock.move_shape(rocks::ShapeMove::Down, &map);
+        rock.move_shape(get_rocks_sideways_movement(air_jets.next()), are_points_free);
+        rock.move_shape(rocks::ShapeMove::Down, are_points_free);
         air_jets_advance += 1;
     }
     if let rocks::ShapeState::Settled(settled_shape) = rock {
