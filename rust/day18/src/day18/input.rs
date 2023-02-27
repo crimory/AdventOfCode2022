@@ -1,11 +1,6 @@
-#[derive(PartialEq, Eq, Debug)]
-pub struct Coordinates {
-    pub x: i32,
-    pub y: i32,
-    pub z: i32,
-}
+use crate::day18::domain;
 
-pub fn read_input(input: &str) -> Vec<Coordinates> {
+pub fn read_input(input: &str) -> Vec<domain::Coordinates> {
     input
         .lines()
         .map(|line| {
@@ -13,7 +8,7 @@ pub fn read_input(input: &str) -> Vec<Coordinates> {
             let x = parts.next().unwrap().parse::<i32>().unwrap();
             let y = parts.next().unwrap().parse::<i32>().unwrap();
             let z = parts.next().unwrap().parse::<i32>().unwrap();
-            Coordinates { x, y, z }
+            domain::Coordinates { x, y, z }
         })
         .collect()
 }
@@ -22,21 +17,21 @@ pub fn read_input(input: &str) -> Vec<Coordinates> {
 pub mod tests {
     use super::*;
 
-    pub fn get_expected_coords() -> Vec<Coordinates> {
+    pub fn get_expected_coords() -> Vec<domain::Coordinates> {
         vec![
-            Coordinates { x: 2, y: 2, z: 2 },
-            Coordinates { x: 1, y: 2, z: 2 },
-            Coordinates { x: 3, y: 2, z: 2 },
-            Coordinates { x: 2, y: 1, z: 2 },
-            Coordinates { x: 2, y: 3, z: 2 },
-            Coordinates { x: 2, y: 2, z: 1 },
-            Coordinates { x: 2, y: 2, z: 3 },
-            Coordinates { x: 2, y: 2, z: 4 },
-            Coordinates { x: 2, y: 2, z: 6 },
-            Coordinates { x: 1, y: 2, z: 5 },
-            Coordinates { x: 3, y: 2, z: 5 },
-            Coordinates { x: 2, y: 1, z: 5 },
-            Coordinates { x: 2, y: 3, z: 5 },
+            domain::Coordinates { x: 2, y: 2, z: 2 },
+            domain::Coordinates { x: 1, y: 2, z: 2 },
+            domain::Coordinates { x: 3, y: 2, z: 2 },
+            domain::Coordinates { x: 2, y: 1, z: 2 },
+            domain::Coordinates { x: 2, y: 3, z: 2 },
+            domain::Coordinates { x: 2, y: 2, z: 1 },
+            domain::Coordinates { x: 2, y: 2, z: 3 },
+            domain::Coordinates { x: 2, y: 2, z: 4 },
+            domain::Coordinates { x: 2, y: 2, z: 6 },
+            domain::Coordinates { x: 1, y: 2, z: 5 },
+            domain::Coordinates { x: 3, y: 2, z: 5 },
+            domain::Coordinates { x: 2, y: 1, z: 5 },
+            domain::Coordinates { x: 2, y: 3, z: 5 },
         ]
     }
 

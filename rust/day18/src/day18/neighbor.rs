@@ -1,38 +1,39 @@
-use crate::day18::input;
+use crate::day18::domain;
 
-pub fn get_number_of_neighbors(target: &input::Coordinates, input: &Vec<input::Coordinates>) -> usize {
-    let potential_neighbors = vec![
-        input::Coordinates {
-            x: target.x,
-            y: target.y,
+pub fn get_potential_neighbors(target: &domain::Coordinates) -> Vec<domain::Coordinates> {
+    vec![
+        domain::Coordinates {
             z: target.z + 1,
+            ..*target
         },
-        input::Coordinates {
-            x: target.x,
-            y: target.y,
+        domain::Coordinates {
             z: target.z - 1,
+            ..*target
         },
-        input::Coordinates {
-            x: target.x,
+        domain::Coordinates {
             y: target.y + 1,
-            z: target.z,
+            ..*target
         },
-        input::Coordinates {
-            x: target.x,
+        domain::Coordinates {
             y: target.y - 1,
-            z: target.z,
+            ..*target
         },
-        input::Coordinates {
+        domain::Coordinates {
             x: target.x + 1,
-            y: target.y,
-            z: target.z,
+            ..*target
         },
-        input::Coordinates {
+        domain::Coordinates {
             x: target.x - 1,
-            y: target.y,
-            z: target.z,
+            ..*target
         },
-    ];
+    ]
+}
+
+pub fn get_number_of_neighbors(
+    target: &domain::Coordinates,
+    input: &[domain::Coordinates],
+) -> usize {
+    let potential_neighbors = get_potential_neighbors(target);
     potential_neighbors
         .iter()
         .filter(|neighbor| input.contains(neighbor))
@@ -42,6 +43,7 @@ pub fn get_number_of_neighbors(target: &input::Coordinates, input: &Vec<input::C
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::day18::input;
 
     #[test]
     fn number_of_neighbours_0() {
